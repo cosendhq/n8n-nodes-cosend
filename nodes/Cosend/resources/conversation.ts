@@ -153,7 +153,7 @@ export const conversationDescription: INodeProperties[] = [
 				name: 'Pending Human',
 				value: 'pending_human',
 				description:
-					'The automation has given up and queued this for a person. It waits in the inbox until someone picks it up.',
+					'The automation passed this to a person. It waits in the inbox until someone picks it up.',
 			},
 		],
 		routing: { send: { type: 'body', property: 'control' } },

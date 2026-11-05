@@ -22,8 +22,7 @@ tools. It works on every Cosend plan, including Free.
 
 ## Installation
 
-This is a community node. It is **not** a verified one yet, so it does not appear in the nodes
-panel's search; install it by name.
+Install it by name from Settings → Community nodes.
 
 **From settings** — an owner or admin of the n8n instance opens **Settings → Community nodes →
 Install a community node**, enters `n8n-nodes-cosend`, and clicks **Install**. Everyone on the
@@ -33,9 +32,6 @@ instance can then use it.
 enabled: `N8N_COMMUNITY_PACKAGES_ENABLED` turns community nodes on, and
 `N8N_UNVERIFIED_PACKAGES_ENABLED` allows installing ones outside n8n's verified list. If your
 instance sets either to `false`, that is an instance policy the package cannot change.
-
-**From the nodes panel** — search for **Cosend** and install. This route opens only once n8n
-verifies the node.
 
 ## Credentials
 
@@ -58,6 +54,9 @@ switch on the node — and test traffic does not count towards your usage.
 
 **Base URL** defaults to `https://api.cosend.app/v1`. Change it only to point at a Cosend staging
 host.
+
+**OAuth2 credentials** — a workflow runs unattended and cannot complete a consent flow, so the
+credential here is a long-lived, revocable API key.
 
 ## Operations
 
@@ -100,6 +99,11 @@ host.
 
 There is no Create: a conversation exists because a message exists.
 
+- **Automation handover is one-way.** `Set Control` hands a conversation from the automation to a
+  person, as `Human` or `Pending Human`.
+- **`App` control is observed, never set.** Cosend records it when the owner replies from their
+  phone. You can *filter* conversations by it; you cannot assign it.
+
 ### Automation
 
 | Operation | What it does |
@@ -126,6 +130,9 @@ There is no Create: a conversation exists because a message exists.
 | Operation | What it does |
 |---|---|
 | Create | Set up a ladder of reminders around one appointment — for example 24 hours and 2 hours before — with a timezone, a daylight-saving policy and optional quiet hours |
+
+- **Recurring schedules are not available.** `Schedule → Create` builds an anchored ladder — one
+  appointment plus offsets. There is no RRULE support in the API today, so this node offers none.
 
 ### Workspace
 
@@ -217,13 +224,9 @@ context.
 | Cosend API | `v1` |
 | Runtime dependencies | **none** |
 
-> The minimum n8n and Node.js versions are not stated because neither has been measured. Neither
-> `n8n-workflow` nor `@n8n/node-cli` declares an `engines` range to inherit, and a floor guessed
-> from the outside is exactly the kind of claim that sends someone down a blind alley.
+## WhatsApp rules to know
 
-## Limitations
-
-These are WhatsApp's rules, not Cosend's, and knowing them saves a lot of debugging.
+WhatsApp sets these rules, and the node is built around them.
 
 - **The 24-hour service window.** You may send free-form messages only within 24 hours of the
   contact's last message to you. After that only a template Meta has approved will go out. The
@@ -236,18 +239,6 @@ These are WhatsApp's rules, not Cosend's, and knowing them saves a lot of debugg
   required alongside it.
 - **Opt-out is final until the contact writes again.** WhatsApp does not allow sending to a contact
   who opted out.
-- **Automation handover is one-way.** A conversation can be handed from the automation to a human;
-  there is no path back through this node, by design. `Set Control` therefore offers `Human` and
-  `Pending Human` only.
-- **`App` control is observed, never set.** Cosend records it when the owner replies from their
-  phone. You can *filter* conversations by it; you cannot assign it.
-- **Recurring schedules are not available.** `Schedule → Create` builds an anchored ladder — one
-  appointment plus offsets. There is no RRULE support in the API today, so this node offers none.
-
-### Not in this version
-
-- **OAuth2 credentials** — a workflow runs unattended and cannot complete a consent flow, so the
-  credential here is a long-lived, revocable API key.
 
 ## Resources
 

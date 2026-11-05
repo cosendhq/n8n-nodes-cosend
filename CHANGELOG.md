@@ -5,7 +5,18 @@ All notable changes to `n8n-nodes-cosend` are documented here. This project foll
 
 ## [Unreleased]
 
-Nothing yet.
+## [2026.11.0] - 2026-11-05
+
+Versions are date-based from this release: `YYYY.M.N`, the year, the month and that month's
+release number. Each one is a valid semantic version.
+
+### Changed
+
+- **README:** installing from Settings → Community nodes leads the Installation section; the
+  rules WhatsApp sets have their own section, "WhatsApp rules to know"; the handover and `App`
+  control notes sit with Conversation, the schedule note with Schedule, and the OAuth2 note with
+  Credentials.
+- **Set Control:** the `Pending Human` option now reads "The automation passed this to a person."
 
 ## [0.2.0] — 2026-10-28
 
