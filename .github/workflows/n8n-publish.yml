@@ -1,0 +1,78 @@
+name: n8n-publish
+
+# ── n8n-nodes-cosend → npm, with provenance, via npm Trusted Publishing (OIDC) ────────────────
+#
+# npm side: a Trusted Publisher on package n8n-nodes-cosend with owner cosendhq, repository
+# n8n-nodes-cosend, workflow filename n8n-publish.yml and no environment. The filename is part of
+# the trust, so renaming this file breaks publishing until the npm setting is changed too.
+# There is no NPM_TOKEN: npm exchanges this job's OIDC token for a short-lived publish token.
+#
+# Trusted Publishing needs npm CLI >= 11.5.1 and Node >= 22.14.0, a GitHub-hosted runner, and
+# `id-token: write`. Provenance comes from `n8n-node release`, which under GITHUB_ACTIONS runs
+# lint → build → `npm publish` with NPM_CONFIG_PROVENANCE=true (@n8n/node-cli >= 0.23.0).
+# npm only generates provenance from a PUBLIC repository, and package.json `repository.url` must
+# name the repository the package was built in, which is this one.
+#
+# To release: land the version bump on main, then push tag n8n-v<that version>. A local
+# `pnpm run release` (release-it) tags a bare <version>, which deliberately does NOT trigger this.
+# This is the only publisher. `n8n-node release --init-workflow` would scaffold a second one,
+# publish.yml, that fires on every bare version tag, so don't run it here.
+
+on:
+  push:
+    # ONLY n8n-v<major>.<minor>.<patch>. No other tag and no branch push ever publishes.
+    tags: ['n8n-v*.*.*']
+  # For a rerun. The job's first step refuses every ref but the default branch and an n8n-v*.*.*
+  # tag, because a dispatch otherwise publishes package.json's version from whatever ref was picked.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      # Before checkout, so a refused ref's code never runs. `[^/]*` is the tag filter's `*`,
+      # which stops at a slash, so this admits exactly the tags the push trigger does.
+      # It stops a mistaken dispatch, not someone with write access: a dispatch runs the copy of
+      # this file at the chosen ref, which can lack the guard, and such a person can push an
+      # n8n-v tag anyway. Enforcing it outside this file needs a GitHub environment with tag and
+      # branch rules, named here and in the npm Trusted Publisher.
+      - name: Refuse any ref but the default branch or an n8n-v*.*.* tag
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          tag='^refs/tags/n8n-v[^/]*\.[^/]*\.[^/]*$'
+          if [[ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" && ! "$GITHUB_REF" =~ $tag ]]; then
+            echo "::error::Refusing to publish from $GITHUB_REF. Only $DEFAULT_BRANCH or an n8n-v*.*.* tag publishes."
+            exit 1
+          fi
+          echo "Publishing from $GITHUB_REF."
+
+      - uses: actions/checkout@v5
+
+      # The version comes from package.json's `packageManager`, the exact pin the lockfile was
+      # written by.
+      - uses: pnpm/action-setup@v6
+
+      # No dependency cache: a publish job should not restore state another run wrote.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: npm >= 11.5.1 (Trusted Publishing)
+        run: |
+          current="$(npm --version)"
+          if [ "$(printf '%s\n' 11.5.1 "$current" | sort -V | head -n1)" != 11.5.1 ]; then
+            npm install -g npm@11
+          fi
+          node --version
+          npm --version
+
+      - run: pnpm install --frozen-lockfile
+
+      # lint → build → npm publish --provenance (see the header).
+      - run: pnpm run release

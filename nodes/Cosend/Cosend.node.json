@@ -1,0 +1,10 @@
+{
+	"node": "n8n-nodes-cosend.cosend",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Communication", "Marketing & Content", "Sales"],
+	"resources": {
+		"credentialDocumentation": [{ "url": "https://cosend.app/docs/n8n#credentials" }],
+		"primaryDocumentation": [{ "url": "https://cosend.app/docs/n8n" }]
+	}
+}

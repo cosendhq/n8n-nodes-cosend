@@ -1,0 +1,66 @@
+{
+	"name": "n8n-nodes-cosend",
+	"version": "0.2.0",
+	"description": "Send and receive WhatsApp messages from n8n with Cosend \u2014 WhatsApp Coexistence, contacts, conversations, automations and usage.",
+	"license": "MIT",
+	"packageManager": "pnpm@10.28.1",
+	"homepage": "https://cosend.app/n8n",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"cosend",
+		"whatsapp",
+		"whatsapp-automation",
+		"whatsapp-business",
+		"messaging",
+		"coexistence"
+	],
+	"author": {
+		"name": "True North Tech Group LLC",
+		"email": "hello@cosend.app"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/cosendhq/n8n-nodes-cosend.git"
+	},
+	"bugs": {
+		"url": "https://github.com/cosendhq/n8n-nodes-cosend/issues"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit",
+		"sync-contract": "node scripts/sync-contract.mjs",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/CosendApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Cosend/Cosend.node.js",
+			"dist/nodes/CosendTrigger/CosendTrigger.node.js"
+		]
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "^0.44.5",
+		"eslint": "^9.39.0",
+		"n8n-workflow": "^2.16.0",
+		"prettier": "^3.8.0",
+		"typescript": "5.9.3",
+		"vitest": "^4.1.11"
+	}
+}
