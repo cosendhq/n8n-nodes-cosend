@@ -1,0 +1,238 @@
+{
+  "name": "WhatsApp AI agent that answers customers and hands over to your team",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > API Keys).\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.",
+        "height": 420,
+        "width": 440,
+        "color": 4
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e01",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Passing to a person\n**Pass to my team** is the Cosend node, working as a tool for the agent. The agent calls it when a customer asks for a person, and the conversation waits in your Cosend inbox for your team. Edit its description to change when the agent uses it.",
+        "height": 190,
+        "width": 340,
+        "color": 7
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e02",
+      "name": "Tool use",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        540,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Memory\nEach WhatsApp conversation keeps its own memory, so the agent follows the chat and two customers never share one.",
+        "height": 160,
+        "width": 280,
+        "color": 7
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e03",
+      "name": "Memory note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "events": [
+          "message.received"
+        ],
+        "filters": {
+          "messageTypes": [
+            "text"
+          ]
+        },
+        "options": {}
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e04",
+      "name": "When a WhatsApp message arrives",
+      "type": "n8n-nodes-cosend.cosendTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e99"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content.body }}",
+        "options": {
+          "systemMessage": "You are the friendly WhatsApp assistant for our business. Answer in the customer's language, in short messages that read well on a phone. Use plain text, without markdown.\n\nAbout the business: describe what you sell, your opening hours, your address and how to book here.\n\nWhen the customer asks for a person, wants to complain, or asks something you cannot answer from the text above, call the tool that passes the conversation to the team, then tell the customer a person will reply here soon."
+        }
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e05",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e06",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When a WhatsApp message arrives').item.json.conversation_id }}",
+        "contextWindowLength": 10
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e07",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        280,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Pass this WhatsApp conversation to a person on the team. Use it when the customer asks for a person, wants to complain, or asks something you cannot answer.",
+        "resource": "conversation",
+        "operation": "setControl",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $('When a WhatsApp message arrives').item.json.conversation_id }}",
+          "mode": "id"
+        },
+        "control": "pending_human",
+        "controlOptions": {
+          "reason": "={{ $fromAI('reason', 'Why the customer needs a person, in one short sentence', 'string') }}"
+        }
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e08",
+      "name": "Pass to my team",
+      "type": "n8n-nodes-cosend.cosendTool",
+      "typeVersion": 1,
+      "position": [
+        440,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "conversation",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $('When a WhatsApp message arrives').item.json.conversation_id }}",
+          "mode": "id"
+        },
+        "messageType": "text",
+        "text": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e09",
+      "name": "Reply on WhatsApp",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        640,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "When a WhatsApp message arrives": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass to my team": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Reply on WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

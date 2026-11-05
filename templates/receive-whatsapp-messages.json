@@ -1,0 +1,259 @@
+{
+  "name": "Receive WhatsApp messages and reply by keyword",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Receive WhatsApp messages\n\nEach WhatsApp message your number receives starts this workflow. A keyword picks the reply, and anything else goes to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > API Keys).\n3. Edit the keywords in **Route by keyword** and the text in each reply.\n4. Turn the workflow on. Cosend connects to it by itself, so there is no URL to copy.\n\nSend **price** or **hours** to your business number to see it answer.",
+        "height": 400,
+        "width": 420,
+        "color": 4
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a01",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Keywords\nEach rule checks the message text, in any letter case. Add a rule for each keyword you want, and give its output a name.\n\nThe last output, **Anything else**, catches every other message.",
+        "height": 190,
+        "width": 320,
+        "color": 7
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a02",
+      "name": "Keywords",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Replies\nEach reply goes into the same conversation, inside WhatsApp's 24-hour window, so any text works here.\n\n**Pass to my team** puts the conversation in your Cosend inbox for a person to answer.",
+        "height": 170,
+        "width": 320,
+        "color": 7
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a03",
+      "name": "Replies",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "events": [
+          "message.received"
+        ],
+        "filters": {
+          "messageTypes": [
+            "text"
+          ]
+        },
+        "options": {}
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a04",
+      "name": "When a WhatsApp message arrives",
+      "type": "n8n-nodes-cosend.cosendTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a99"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5b01",
+                    "leftValue": "={{ $json.content.body }}",
+                    "rightValue": "price",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Prices"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5b02",
+                    "leftValue": "={{ $json.content.body }}",
+                    "rightValue": "hours",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Opening hours"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Anything else",
+          "ignoreCase": true
+        }
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a05",
+      "name": "Route by keyword",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "conversation",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $json.conversation_id }}",
+          "mode": "id"
+        },
+        "messageType": "text",
+        "text": "Thanks for asking! Our prices start at 25 EUR. Reply with the service you want and we will send you the details.",
+        "options": {}
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a06",
+      "name": "Reply with prices",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        600,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "conversation",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $json.conversation_id }}",
+          "mode": "id"
+        },
+        "messageType": "text",
+        "text": "We are open Monday to Friday, 9:00 to 18:00, and Saturday, 10:00 to 14:00. See you soon!",
+        "options": {}
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a07",
+      "name": "Reply with opening hours",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "operation": "setControl",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $json.conversation_id }}",
+          "mode": "id"
+        },
+        "control": "pending_human",
+        "controlOptions": {
+          "reason": "The message matched no keyword"
+        }
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a08",
+      "name": "Pass to my team",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        600,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "When a WhatsApp message arrives": {
+      "main": [
+        [
+          {
+            "node": "Route by keyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by keyword": {
+      "main": [
+        [
+          {
+            "node": "Reply with prices",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply with opening hours",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pass to my team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

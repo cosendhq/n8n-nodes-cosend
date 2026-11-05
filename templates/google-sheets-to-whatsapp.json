@@ -1,0 +1,133 @@
+{
+  "name": "Google Sheets to WhatsApp: send a template to every new row",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Google Sheets to WhatsApp\n\nEvery new row in your sheet sends an approved WhatsApp template to the phone number in that row.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Make a sheet with a header row: **phone** and **name**. One customer per row.\n3. Open **New row in Google Sheets**, connect your Google account and pick the sheet.\n4. Open **Send WhatsApp template**, add a **Cosend API** credential with your API key (Cosend dashboard > Settings > API Keys).\n5. Pick your approved template and its language. Turn the workflow on.\n\nAdd a row and the message goes out within a minute.",
+        "height": 400,
+        "width": 420,
+        "color": 4
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a01",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### The phone column\nWrite each number with its country code, for example **+44 7700 900123**. The workflow keeps the digits and adds the **+**, so spaces and dashes are fine.",
+        "height": 170,
+        "width": 300,
+        "color": 7
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a02",
+      "name": "Phone numbers",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### The template\nWhatsApp lets a business start a conversation with a template Meta approved. Create one in the Cosend dashboard under **Templates**, with one variable for the first name, for example:\n\n*Hi {{1}}, thanks for signing up. Reply here any time.*\n\n**Components** fills that variable from the **name** column. A template with no variables takes **[]**.",
+        "height": 260,
+        "width": 340,
+        "color": 7
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a03",
+      "name": "Template",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        280,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a04",
+      "name": "New row in Google Sheets",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "contact",
+        "contactId": {
+          "__rl": true,
+          "value": "={{ '+' + String($json.phone).replace(/[^0-9]/g, '') }}",
+          "mode": "phone"
+        },
+        "messageType": "template",
+        "templateName": {
+          "__rl": true,
+          "value": "welcome_message",
+          "mode": "name"
+        },
+        "templateLanguage": "en_US",
+        "templateComponents": "=[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"{{ $json.name }}\"}]}]",
+        "options": {}
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a05",
+      "name": "Send WhatsApp template",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        340,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "New row in Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
