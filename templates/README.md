@@ -16,8 +16,8 @@ Every template needs:
 - **The Cosend community node.** In n8n, an owner or admin opens **Settings > Community nodes >
   Install a community node** and enters `n8n-nodes-cosend`.
 - **A Cosend API key.** In the [Cosend dashboard](https://dashboard.cosend.app), open
-  **Settings > API Keys** and create one. In n8n, add a **Cosend API** credential and paste it. A
-  `cok_test_` or `csk_test_` key lets you build without sending live traffic.
+  **Settings > Developer > API keys** and create one. In n8n, add a **Cosend API** credential and
+  paste it. A `cok_test_` or `csk_test_` key lets you build without sending live traffic.
 - **A WhatsApp number connected to Cosend.**
 
 ## How to import
@@ -52,13 +52,17 @@ number in that row, with the row's name filled into the message.
 
 **How to import.** Import [`google-sheets-to-whatsapp.json`](./google-sheets-to-whatsapp.json),
 pick your sheet in **New row in Google Sheets**, then pick your template and its language in
-**Send WhatsApp template**. A template without variables takes `[]` in **Components**.
+**Send WhatsApp template**. A template without variables takes `[]` in **Components**. A
+connection key already names the WhatsApp number that sends; with a workspace key, pick that number
+in **Connection** too.
 
 ## Receive WhatsApp messages
 
 **What it does.** The Cosend Trigger starts the workflow for each text message your number
 receives. A Switch node routes it by keyword: **price** gets your prices, **hours** gets your
-opening hours, and every other message goes to your team in the Cosend inbox.
+opening hours, and every other message goes to your team in the Cosend inbox. The workflow answers
+only while no person has taken over the chat, so once your team or the WhatsApp Business app
+answers, it stays quiet.
 
 **What you need.**
 
@@ -74,13 +78,18 @@ your business. Add a rule to **Route by keyword** for each new keyword.
 **What it does.** n8n's AI Agent answers each WhatsApp message in the same conversation. It keeps
 a memory per conversation, and it has the Cosend node as a tool: when a customer asks for a
 person, the agent passes the conversation to your team in the Cosend inbox and tells the customer
-a person will reply.
+a person will reply. From then on the agent stays quiet in that chat, and it does the same when you
+answer from the WhatsApp Business app.
 
 **What you need.**
 
 - An n8n instance Cosend can reach over the internet.
 - A chat model credential. The template uses OpenAI; any chat model node fits the same slot.
+- On self-hosted n8n 1.x, the environment variable `N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true`,
+  so the agent can use the Cosend node as a tool. Current n8n (tested on 2.46) offers it as a tool
+  with no setting.
 
 **How to import.** Import [`whatsapp-ai-agent.json`](./whatsapp-ai-agent.json), pick your Cosend
-credential on **When a WhatsApp message arrives**, **Pass to my team** and **Reply on WhatsApp**,
-add your model credential, and describe your business in the **AI Agent** system message.
+credential on **When a WhatsApp message arrives**, **Who is answering**, **Pass to my team** and
+**Reply on WhatsApp**, add your model credential, and describe your business in the **AI Agent**
+system message.

@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Receive WhatsApp messages\n\nEach WhatsApp message your number receives starts this workflow. A keyword picks the reply, and anything else goes to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > API Keys).\n3. Edit the keywords in **Route by keyword** and the text in each reply.\n4. Turn the workflow on. Cosend connects to it by itself, so there is no URL to copy.\n\nSend **price** or **hours** to your business number to see it answer.",
-        "height": 400,
+        "content": "## Receive WhatsApp messages\n\nEach WhatsApp message your number receives starts this workflow. A keyword picks the reply, and anything else goes to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Edit the keywords in **Route by keyword** and the text in each reply.\n4. Turn the workflow on. Cosend connects to it by itself, so there is no URL to copy.\n\nSend **price** or **hours** to your business number to see it answer.",
+        "height": 440,
         "width": 420,
         "color": 4
       },
@@ -29,7 +29,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        180,
+        620,
         -320
       ]
     },
@@ -45,7 +45,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        560,
+        1000,
         380
       ]
     },
@@ -86,7 +86,7 @@
                 "conditions": [
                   {
                     "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5b01",
-                    "leftValue": "={{ $json.content.body }}",
+                    "leftValue": "={{ $('When a WhatsApp message arrives').item.json.content.body }}",
                     "rightValue": "price",
                     "operator": {
                       "type": "string",
@@ -110,7 +110,7 @@
                 "conditions": [
                   {
                     "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5b02",
-                    "leftValue": "={{ $json.content.body }}",
+                    "leftValue": "={{ $('When a WhatsApp message arrives').item.json.content.body }}",
                     "rightValue": "hours",
                     "operator": {
                       "type": "string",
@@ -137,7 +137,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        260,
+        700,
         0
       ]
     },
@@ -148,7 +148,7 @@
         "sendTo": "conversation",
         "conversationId": {
           "__rl": true,
-          "value": "={{ $json.conversation_id }}",
+          "value": "={{ $('When a WhatsApp message arrives').item.json.conversation_id }}",
           "mode": "id"
         },
         "messageType": "text",
@@ -160,7 +160,7 @@
       "type": "n8n-nodes-cosend.cosend",
       "typeVersion": 1,
       "position": [
-        600,
+        1040,
         -180
       ]
     },
@@ -171,7 +171,7 @@
         "sendTo": "conversation",
         "conversationId": {
           "__rl": true,
-          "value": "={{ $json.conversation_id }}",
+          "value": "={{ $('When a WhatsApp message arrives').item.json.conversation_id }}",
           "mode": "id"
         },
         "messageType": "text",
@@ -183,7 +183,7 @@
       "type": "n8n-nodes-cosend.cosend",
       "typeVersion": 1,
       "position": [
-        600,
+        1040,
         0
       ]
     },
@@ -193,7 +193,7 @@
         "operation": "setControl",
         "conversationId": {
           "__rl": true,
-          "value": "={{ $json.conversation_id }}",
+          "value": "={{ $('When a WhatsApp message arrives').item.json.conversation_id }}",
           "mode": "id"
         },
         "control": "pending_human",
@@ -206,8 +206,76 @@
       "type": "n8n-nodes-cosend.cosend",
       "typeVersion": 1,
       "position": [
-        600,
+        1040,
         180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "operation": "get",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $json.conversation_id }}",
+          "mode": "id"
+        }
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f50c1",
+      "name": "Who is answering",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f50c3",
+              "leftValue": "={{ $json.control }}",
+              "rightValue": "bot",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f50c2",
+      "name": "No person has taken over",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Your team comes first\nThe workflow answers only while no person has taken over the chat. When it passes a chat to your team, when someone picks a chat up in the Cosend inbox, or when you reply from the WhatsApp Business app, the workflow stays quiet for that chat.",
+        "height": 200,
+        "width": 340,
+        "color": 7
+      },
+      "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f50c4",
+      "name": "Your team comes first",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        120,
+        200
       ]
     }
   ],
@@ -216,7 +284,7 @@
       "main": [
         [
           {
-            "node": "Route by keyword",
+            "node": "Who is answering",
             "type": "main",
             "index": 0
           }
@@ -246,6 +314,29 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Who is answering": {
+      "main": [
+        [
+          {
+            "node": "No person has taken over",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No person has taken over": {
+      "main": [
+        [
+          {
+            "node": "Route by keyword",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },

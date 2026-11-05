@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > API Keys).\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.",
-        "height": 420,
+        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.",
+        "height": 460,
         "width": 440,
         "color": 4
       },
@@ -29,7 +29,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        540,
+        980,
         400
       ]
     },
@@ -45,7 +45,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        180,
+        620,
         400
       ]
     },
@@ -74,7 +74,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.content.body }}",
+        "text": "={{ $('When a WhatsApp message arrives').item.json.content.body }}",
         "options": {
           "systemMessage": "You are the friendly WhatsApp assistant for our business. Answer in the customer's language, in short messages that read well on a phone. Use plain text, without markdown.\n\nAbout the business: describe what you sell, your opening hours, your address and how to book here.\n\nWhen the customer asks for a person, wants to complain, or asks something you cannot answer from the text above, call the tool that passes the conversation to the team, then tell the customer a person will reply here soon."
         }
@@ -84,7 +84,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2,
       "position": [
-        260,
+        700,
         0
       ]
     },
@@ -103,7 +103,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        120,
+        560,
         220
       ]
     },
@@ -118,7 +118,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        280,
+        720,
         220
       ]
     },
@@ -143,7 +143,7 @@
       "type": "n8n-nodes-cosend.cosendTool",
       "typeVersion": 1,
       "position": [
-        440,
+        880,
         220
       ]
     },
@@ -166,8 +166,76 @@
       "type": "n8n-nodes-cosend.cosend",
       "typeVersion": 1,
       "position": [
-        640,
+        1080,
         0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "operation": "get",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $json.conversation_id }}",
+          "mode": "id"
+        }
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d60c1",
+      "name": "Who is answering",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d60c3",
+              "leftValue": "={{ $json.control }}",
+              "rightValue": "bot",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d60c2",
+      "name": "No person has taken over",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Your team comes first\nThe workflow answers only while no person has taken over the chat. When it passes a chat to your team, when someone picks a chat up in the Cosend inbox, or when you reply from the WhatsApp Business app, the workflow stays quiet for that chat.",
+        "height": 200,
+        "width": 340,
+        "color": 7
+      },
+      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d60c4",
+      "name": "Your team comes first",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        60,
+        200
       ]
     }
   ],
@@ -176,7 +244,7 @@
       "main": [
         [
           {
-            "node": "AI Agent",
+            "node": "Who is answering",
             "type": "main",
             "index": 0
           }
@@ -225,6 +293,29 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Who is answering": {
+      "main": [
+        [
+          {
+            "node": "No person has taken over",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No person has taken over": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },
