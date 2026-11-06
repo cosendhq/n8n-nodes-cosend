@@ -45,7 +45,7 @@ export const contactDescription: INodeProperties[] = [
 				value: 'create',
 				action: 'Create a contact',
 				description:
-					"Add a contact. If this number already has one on this connection, you get that contact back unchanged — use 'Create or Update' to update it.",
+					"Add a contact. If this number already has one on this connection, you get that contact back unchanged. Use 'Create or Update' to update it.",
 				routing: { request: { method: 'POST', url: '/contacts' } },
 			},
 			{

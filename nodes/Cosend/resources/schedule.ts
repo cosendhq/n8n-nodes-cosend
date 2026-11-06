@@ -35,7 +35,7 @@ export const scheduleDescription: INodeProperties[] = [
 				value: 'create',
 				action: 'Create a schedule',
 				description:
-					'Set up a ladder of reminders around one appointment — for example 24 hours and 2 hours before',
+					'Set up a ladder of reminders around one appointment, for example 24 hours and 2 hours before',
 				routing: {
 					request: {
 						method: 'POST',
@@ -65,7 +65,7 @@ export const scheduleDescription: INodeProperties[] = [
 		default: '',
 		required: true,
 		placeholder: 'e.g. +919876543210',
-		description: 'Who to remind — a phone number in E.164 format, or a Cosend contact ID',
+		description: 'Who to remind: a phone number in E.164 format, or a Cosend contact ID',
 		displayOptions: { show: on('create') },
 		routing: { send: { type: 'body', property: 'to' } },
 	},
@@ -167,7 +167,7 @@ export const scheduleDescription: INodeProperties[] = [
 				name: 'name',
 				type: 'string',
 				default: '',
-				placeholder: 'e.g. Dental check-up — Priya',
+				placeholder: 'e.g. Dental check-up for Priya',
 				description: 'A label for this schedule, so your team can find it in Cosend',
 				routing: { send: { type: 'body', property: 'name' } },
 			},
