@@ -120,7 +120,7 @@ export const idempotencyKeyOption: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'A key that makes this request safe to retry. Leave empty and Cosend generates one per request. Set your own — an order ID, say — and a repeated request returns the first result instead of sending again.',
+		'A key that makes this request safe to retry. Leave empty and Cosend generates one per request. Set your own, such as an order ID, and a repeated request returns the first result instead of sending again.',
 };
 
 /**

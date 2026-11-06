@@ -10,12 +10,12 @@ WhatsApp automation for n8n, powered by [Cosend](https://cosend.app).
 
 This package adds two nodes to n8n. **Cosend** sends WhatsApp messages and manages the contacts,
 conversations, automations and usage behind them. **Cosend Trigger** starts a workflow the moment
-something happens on your WhatsApp number — a message arrives, a delivery status changes, or the
+something happens on your WhatsApp number: a message arrives, a delivery status changes, or the
 24-hour reply window is about to close.
 
 Cosend runs on WhatsApp Coexistence, so the number you already use in the WhatsApp Business app
 keeps working while your automations run alongside it. That is why the trigger can tell you when
-**the owner replied from their own phone** — an event no Cloud-API-only integration can emit.
+**the owner replied from their own phone**, an event that only Coexistence makes possible.
 
 The **Cosend** node declares `usableAsTool`, so n8n's AI Agent nodes can call its operations as
 tools. It works on every Cosend plan, including Free.
@@ -24,11 +24,11 @@ tools. It works on every Cosend plan, including Free.
 
 Install it by name from Settings → Community nodes.
 
-**From settings** — an owner or admin of the n8n instance opens **Settings → Community nodes →
+**From settings.** An owner or admin of the n8n instance opens **Settings → Community nodes →
 Install a community node**, enters `n8n-nodes-cosend`, and clicks **Install**. Everyone on the
 instance can then use it.
 
-**Self-hosted** — two environment variables decide whether that is possible, and both default to
+**Self-hosted.** Two environment variables decide whether that is possible, and both default to
 enabled: `N8N_COMMUNITY_PACKAGES_ENABLED` turns community nodes on, and
 `N8N_UNVERIFIED_PACKAGES_ENABLED` allows installing ones outside n8n's verified list. If your
 instance sets either to `false`, that is an instance policy the package cannot change.
@@ -41,22 +41,21 @@ instance sets either to `false`, that is an instance policy the package cannot c
 2. Go to **Settings → API Keys**.
 3. Click **Create key**, name it (for example `n8n`), and copy the key. **It is shown once.**
 4. In n8n, add a **Cosend API** credential and paste the key.
-5. Click **Test** — a green tick means the key is real. The test calls Cosend's identity endpoint,
+5. Click **Test**. A green tick means the key is real. The test calls Cosend's identity endpoint,
    which never fails for lack of permissions, so a red one means the key itself is wrong.
 
 **Which key to create.** A **workspace key** (`cok_live_…`) reaches every WhatsApp number in your
 workspace; use one when a workflow spans several numbers. A **connection key** (`csk_live_…`) is
-scoped to a single number and cannot reach any other — prefer it when the workflow is about one
-number.
+scoped to a single number; prefer it when the workflow is about one number.
 
-Use a `cok_test_…` or `csk_test_…` key while you build. The key is the mode — there is no test
-switch on the node — and test traffic does not count towards your usage.
+Use a `cok_test_…` or `csk_test_…` key while you build. The key sets the mode, so the node needs
+no test switch, and test traffic does not count towards your usage.
 
 **Base URL** defaults to `https://api.cosend.app/v1`. Change it only to point at a Cosend staging
 host.
 
-**OAuth2 credentials** — a workflow runs unattended and cannot complete a consent flow, so the
-credential here is a long-lived, revocable API key.
+**API key credentials.** A workflow runs unattended, so the credential here is a long-lived,
+revocable API key.
 
 ## Operations
 
@@ -64,7 +63,7 @@ credential here is a long-lived, revocable API key.
 
 | Operation | What it does |
 |---|---|
-| Send | Send one WhatsApp message per input item — text, media, template, interactive, location or contact cards. Media comes from a binary field, a URL or a media ID |
+| Send | Send one WhatsApp message per input item: text, media, template, interactive, location or contact cards. Media comes from a binary field, a URL or a media ID |
 | Send Batch | Send every input item in one request, up to 100 at a time, with a per-item result |
 | Get | Retrieve one message by its Cosend ID or its WhatsApp message ID |
 | Get Many | List messages, filtered by conversation, contact, connection, direction, source or status |
@@ -76,7 +75,7 @@ credential here is a long-lived, revocable API key.
 | Operation | What it does |
 |---|---|
 | Create | Add a contact. If the number already has one on that connection, you get it back unchanged |
-| Create or Update | The upsert: find the contact by phone number and update it, or create it if there is none — no IF node needed in front |
+| Create or Update | The upsert: find the contact by phone number and update it, or create it if there is none, with no IF node in front |
 | Get | One contact, by ID, phone number or WhatsApp business-scoped ID |
 | Get Many | List contacts, filtered by search text, tags or connection |
 | Update | Change name, attributes, tags, locale, timezone or blocked state. Tags set here replace the contact's whole list |
@@ -97,7 +96,7 @@ credential here is a long-lived, revocable API key.
 | Edit Note | Change the text of a note; who it mentions stays as it was. Only the person who wrote it can |
 | Delete Note | Remove a note. The person who wrote it, or an owner or admin, can |
 
-There is no Create: a conversation exists because a message exists.
+A conversation opens with its first message.
 
 - **Automation handover is one-way.** `Set Control` hands a conversation from the automation to a
   person, as `Human` or `Pending Human`.
@@ -117,7 +116,7 @@ There is no Create: a conversation exists because a message exists.
 
 | Operation | What it does |
 |---|---|
-| Get | One billing period's usage: each meter's count and what your plan includes — so a workflow can react to its own consumption |
+| Get | One billing period's usage: each meter's count and what your plan includes, so a workflow can react to its own consumption |
 
 ### Notification
 
@@ -129,10 +128,10 @@ There is no Create: a conversation exists because a message exists.
 
 | Operation | What it does |
 |---|---|
-| Create | Set up a ladder of reminders around one appointment — for example 24 hours and 2 hours before — with a timezone, a daylight-saving policy and optional quiet hours |
+| Create | Set up a ladder of reminders around one appointment (for example 24 hours and 2 hours before), with a timezone, a daylight-saving policy and optional quiet hours |
 
-- **Recurring schedules are not available.** `Schedule → Create` builds an anchored ladder — one
-  appointment plus offsets. There is no RRULE support in the API today, so this node offers none.
+- **Schedules are anchored.** `Schedule → Create` builds an anchored ladder: one appointment plus
+  offsets.
 
 ### Workspace
 
@@ -150,12 +149,12 @@ its events no longer match the workflow, it is replaced rather than left pointin
 | Event | Fires when |
 |---|---|
 | Message Received | A contact sends you a WhatsApp message |
-| **Message Echo** | **The owner replies from the WhatsApp Business app on their phone.** Coexistence only — use it to stop a workflow following up when a human already answered |
+| **Message Echo** | **The owner replies from the WhatsApp Business app on their phone.** Coexistence only. Use it to stop a workflow following up when a human already answered |
 | Message Sent | Cosend accepted a message to send |
 | Message Status Changed | An outgoing message was sent, delivered, read or failed |
 | Conversation Created | A new conversation thread opened |
 | Conversation Updated | State, assignee, control or labels changed |
-| **Conversation Window Expiring** | **The 24-hour window closes in one hour** — the single most common WhatsApp integration bug, turned into an event |
+| **Conversation Window Expiring** | **The 24-hour window closes in one hour.** It turns the most common WhatsApp integration bug into an event |
 | Conversation Lock Changed / Lock Requested / Lock Request Resolved | A team member took, released, asked for or was given control |
 | Note Created / Updated / Deleted | An internal note changed. The event carries the note's IDs, not its text |
 | Contact Created / Updated / Consent Changed | A contact was added, changed, opted in or opted out |
@@ -169,12 +168,12 @@ its events no longer match the workflow, it is replaced rather than left pointin
 | Template Status Changed | Meta approved, rejected or paused one of your templates |
 | Usage Threshold Reached | A meter reached 80% or 100% of what your plan includes |
 
-**Every delivery is signed.** The node checks the `Cosend-Signature` header — HMAC-SHA256 over the
-raw body, compared in constant time — before it does anything else, and refuses a delivery signed
+**Every delivery is signed.** The node checks the `Cosend-Signature` header (HMAC-SHA256 over the
+raw body, compared in constant time) before it does anything else, and refuses a delivery signed
 more than five minutes ago. A delivery that fails the check gets a `401` and starts no workflow.
 A test delivery from the dashboard (`ping`) is answered and starts no workflow either.
 
-**Simplify** is on by default and emits the resource with the event name attached — the same shape
+**Simplify** is on by default and emits the resource with the event name attached: the same shape
 a `Cosend → Get` node returns, so one workflow can parse both. Turn it off for the full event
 envelope, including `previous_attributes` on update events.
 
@@ -202,17 +201,17 @@ the events does.
 A self-hosted n8n behind NAT with no public URL cannot be reached by Cosend, and the trigger will
 tell you so rather than activating into silence. Two ways round it:
 
-- n8n Cloud, a tunnel, or any reverse-proxied instance works as-is — set `WEBHOOK_URL` to the
+- n8n Cloud, a tunnel, or any reverse-proxied instance works as-is: set `WEBHOOK_URL` to the
   public address.
 - Otherwise, register an outbound webhook in the Cosend dashboard pointing at n8n's built-in
-  **Webhook** node, and use the Cosend node for the sending half. You lose signature verification
-  unless you implement it yourself.
+  **Webhook** node, and use the Cosend node for the sending half. Signature verification then
+  runs in your own workflow, if you add it.
 
 ## Errors
 
 A failed operation carries Cosend's own explanation. With **On Error → Continue**, the failed item's
 output has `error` (what happened), `code` (the code in [the error reference](https://cosend.app/docs/errors)),
-`request_id` (the one to quote to Cosend support) and, for the common cases, `hint` — what to do
+`request_id` (the one to quote to Cosend support) and, for the common cases, `hint`: what to do
 next. When the node stops on an error instead, the same `code` and `request_id` are on the error's
 context.
 
@@ -220,7 +219,7 @@ context.
 
 | | |
 |---|---|
-| `n8n-workflow` | v2 or later — the peer dependency n8n provides. Built and tested against 2.35. |
+| `n8n-workflow` | v2 or later, the peer dependency n8n provides. Built and tested against 2.35. |
 | Cosend API | `v1` |
 | Runtime dependencies | **none** |
 
@@ -233,8 +232,8 @@ WhatsApp sets these rules, and the node is built around them.
   `Send Mode` option can fall back to a template automatically; **Conversation Window Expiring**
   lets you act before the window shuts.
 - **Template approval.** Templates are approved by Meta, not by Cosend, and approval takes as long
-  as it takes. A template that is not yet approved is listed in the picker with its status so you
-  can see why a send failed.
+  as it takes. A template waiting for approval is listed in the picker with its status, so
+  you can see why a send failed.
 - **A template name is not unique.** The same name exists once per language, so `Language` is
   required alongside it.
 - **Opt-out is final until the contact writes again.** WhatsApp does not allow sending to a contact
@@ -267,7 +266,7 @@ declare.
 
 ## Licence
 
-MIT — see [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE).
 
 **Cosend and the Cosend logo are trademarks of True North Tech Group LLC. The MIT licence covers
 the source code in this repository, not the marks.**

@@ -60,7 +60,7 @@ export const notificationDescription: INodeProperties[] = [
 		default: '',
 		required: true,
 		placeholder: 'e.g. +919876543210',
-		description: 'Who to notify — a phone number in E.164 format, or a Cosend contact ID',
+		description: 'Who to notify: a phone number in E.164 format, or a Cosend contact ID',
 		displayOptions: { show: on('send') },
 		routing: { send: { type: 'body', property: 'to' } },
 	},

@@ -139,7 +139,7 @@ export const messageDescription: INodeProperties[] = [
 	},
 	{
 		...contactLocator(
-			'Who to send to. A phone number that has never messaged you is fine — Cosend creates the contact.',
+			'Who to send to. A phone number that has never messaged you is fine: Cosend creates the contact.',
 		),
 		displayOptions: { show: { ...sending, sendTo: ['contact'] } },
 	},
@@ -151,7 +151,7 @@ export const messageDescription: INodeProperties[] = [
 		...connectionLocator({
 			required: false,
 			description:
-				'Which of your WhatsApp numbers sends this. Leave empty when the credential is a connection key — it already names one.',
+				'Which of your WhatsApp numbers sends this. Leave empty when the credential is a connection key, because it already names one.',
 		}),
 		displayOptions: { show: { ...sending, sendTo: ['contact'] } },
 	},

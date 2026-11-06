@@ -82,7 +82,7 @@ export const conversationDescription: INodeProperties[] = [
 				value: 'markRead',
 				action: 'Mark a conversation as read',
 				description:
-					'Clear the unread count in the Cosend inbox. This is your team’s read state, not the blue ticks on the contact’s phone — use the message operation for those.',
+					'Clear the unread count in the Cosend inbox. This is your team’s read state, not the blue ticks on the contact’s phone. Use the message operation for those.',
 				routing: {
 					request: { method: 'POST', url: '=/conversations/{{ $parameter.conversationId }}/read' },
 				},
@@ -344,7 +344,7 @@ export const conversationDescription: INodeProperties[] = [
 					{
 						name: 'Pending Human',
 						value: 'pending_human',
-						description: 'Queued for a person, not yet picked up',
+						description: 'Waiting in the queue for a person on your team to pick up',
 					},
 				],
 				routing: { send: { type: 'query', property: 'control' } },

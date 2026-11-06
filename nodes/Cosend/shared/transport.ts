@@ -110,7 +110,7 @@ const EXPLANATIONS: Record<string, string> = {
 	service_window_closed:
 		"This contact hasn't messaged you in the last 24 hours, so WhatsApp only allows an approved template. Set 'Message Type' to 'Template', or set 'Send Mode' to 'Auto' and name a fallback template.",
 	template_not_approved:
-		"Meta hasn't approved this template yet. Check its status in Cosend under Templates, and send free-form text instead while the window is open.",
+		"This template needs Meta's approval before it sends. Check its status in Cosend under Templates, and send free-form text instead while the window is open.",
 	template_not_found:
 		"No template with that name and language exists on this connection. Check 'Template' and 'Language', or sync templates in Cosend under Templates.",
 	recipient_opted_out:
@@ -120,23 +120,23 @@ const EXPLANATIONS: Record<string, string> = {
 	connection_not_found:
 		"No connection with that ID exists in this workspace. Pick one from the list in 'Connection'.",
 	connection_not_routable:
-		'This credential cannot send on that connection. A connection key is scoped to one number — use a workspace key, or the key that belongs to this connection.',
+		'This credential cannot send on that connection. A connection key is scoped to one number. Use a workspace key, or the key that belongs to this connection.',
 	conversation_locked:
 		'Another team member holds this conversation. Wait for them to release it, or request control from the Cosend inbox.',
 	control_app_is_observed:
-		"'App' is not a control state you can set — Cosend records it when the owner replies from their phone. Choose 'Human' or 'Pending Human'.",
+		"Cosend sets 'App' itself when the owner replies from their phone. Choose 'Human' or 'Pending Human'.",
 	media_too_large:
 		"This file is larger than WhatsApp allows for its type. WhatsApp's limits are 5 MB for images, 16 MB for audio and video, 100 MB for documents and 500 KB for stickers.",
 	media_unavailable:
 		'Cosend could not read that media. Check the media ID or the URL is reachable.',
 	recurring_schedules_not_available:
-		"Recurring schedules aren't available. Use an anchored schedule instead: one appointment time plus a ladder of reminder offsets.",
+		'Use an anchored schedule: one appointment time plus a ladder of reminder offsets.',
 	throughput_exceeded:
 		'This connection is sending at its maximum rate. Cosend paces sends per connection; lower the workflow rate or send in a batch.',
 	rate_limited:
 		'Too many requests. Wait for the period given by the Retry-After header and try again.',
 	idempotency_key_required:
-		"This endpoint needs an 'Idempotency Key'. The node normally supplies one — set it explicitly under 'Options' if you cleared it.",
+		"This endpoint needs an 'Idempotency Key'. The node normally supplies one. Set it under 'Options' if you cleared it.",
 	idempotency_key_reuse:
 		"This 'Idempotency Key' was already used with a different request body. Use a new key, or send the identical body again to get the original result.",
 	insufficient_scope:

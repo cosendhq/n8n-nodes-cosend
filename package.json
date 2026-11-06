@@ -1,7 +1,7 @@
 {
 	"name": "n8n-nodes-cosend",
 	"version": "2026.11.0",
-	"description": "Send and receive WhatsApp messages from n8n with Cosend \u2014 WhatsApp Coexistence, contacts, conversations, automations and usage.",
+	"description": "Send and receive WhatsApp messages from n8n with Cosend: WhatsApp Coexistence, contacts, conversations, automations and usage.",
 	"license": "MIT",
 	"packageManager": "pnpm@10.28.1",
 	"homepage": "https://cosend.app/n8n",

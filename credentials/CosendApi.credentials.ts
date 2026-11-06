@@ -40,7 +40,7 @@ export class CosendApi implements ICredentialType {
 			// reaches exactly one and cannot be pointed at another. "Workspace", as cosend.app/n8n
 			// and SPEC §1 *Words* say it.
 			description:
-				'Create one in Cosend under Settings → API Keys. Use a workspace key (cok_live_…) for a workflow that touches several WhatsApp numbers, or a connection key (csk_live_…) when the workflow is about one number — a connection key cannot reach any other.',
+				'Create one in Cosend under Settings → API Keys. Use a workspace key (cok_live_…) for a workflow that touches several WhatsApp numbers, or a connection key (csk_live_…) when the workflow is about one number, because a connection key reaches that number only.',
 		},
 		{
 			displayName: 'Base URL',

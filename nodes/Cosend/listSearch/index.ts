@@ -107,7 +107,7 @@ export async function searchConversations(
 		(conversation) => {
 			const who = conversation.contact?.display_name ?? conversation.id;
 			return {
-				name: `${who} — ${conversation.state}`,
+				name: `${who} (${conversation.state})`,
 				value: conversation.id,
 			};
 		},
@@ -132,7 +132,7 @@ interface TemplateRecord {
  * **Templates that are not sendable are listed, with their status in the label.** Hiding them
  * would be worse: a template awaiting Meta's approval today is the one the workflow is being
  * built for, and a picker that silently omits it reads as "Cosend lost my template". Showing
- * `— PENDING` tells the truth without deciding for the user (standing rule 10).
+ * `: PENDING` tells the truth without deciding for the user (standing rule 10).
  */
 export async function searchTemplates(
 	this: ILoadOptionsFunctions,
@@ -147,11 +147,11 @@ export async function searchTemplates(
 		(template) => ({
 			name: template.sendable
 				? `${template.name} (${template.language})`
-				: `${template.name} (${template.language}) — ${template.status}`,
+				: `${template.name} (${template.language}): ${template.status}`,
 			value: template.name,
 			description: template.sendable
 				? undefined
-				: `Meta has not approved this template yet, so sending it now fails with template_not_approved`,
+				: `This template needs Meta's approval before it sends. Sending it now fails with template_not_approved`,
 		}),
 		(template, needle) => `${template.name} ${template.language}`.toLowerCase().includes(needle),
 		filter,
