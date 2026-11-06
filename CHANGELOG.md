@@ -81,7 +81,7 @@ production-deployment list (the `*.*.*` tag push that `.github/workflows/publish
 
 ### Added
 
-- **Cosend** action node: 20 operations across six resources: Message (send, send batch, get, get
+- **Cosend** action node with 20 operations across six resources: Message (send, send batch, get, get
   many, mark as read, react), Conversation (get, get many, update, set control, mark as read, add
   note), Contact (create, get, get many, update, delete), Notification (send), Schedule (create) and
   Organization (get). Declarative throughout, with `customOperations` for `Send` (binary attachments
