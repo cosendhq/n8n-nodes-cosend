@@ -1,11 +1,11 @@
 {
-  "name": "Google Sheets to WhatsApp: send a template to every new row",
+  "name": "Google Sheets to WhatsApp: send a template to each new row and mark it sent",
   "nodes": [
     {
       "parameters": {
-        "content": "## Google Sheets to WhatsApp\n\nEvery new row in your sheet sends an approved WhatsApp template to the phone number in that row.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Make a sheet with a header row: **phone** and **name**. One customer per row.\n3. Open **New row in Google Sheets**, connect your Google account and pick the sheet.\n4. Open **Send WhatsApp template**, add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys).\n5. Pick your approved template and its language. With a workspace key, also pick the WhatsApp number that sends in **Connection**; a connection key already names one.\n6. Turn the workflow on.\n\nAdd a row and the message goes out within a minute.",
-        "height": 440,
-        "width": 420,
+        "content": "## Google Sheets to WhatsApp\n\nEvery 5 minutes, each row of your sheet with a phone number and no status gets an approved WhatsApp template. The workflow then writes **sent** and the time into that row, or **failed** and the reason, so every row is sent once and you can see what happened.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** in Settings > Community nodes, following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).\n2. Make a sheet with a header row of **phone** and **name**, one customer per row. The workflow adds the **status**, **sent_at** and **error** columns the first time it writes.\n3. Open **Read the sheet**, connect your Google account and pick your sheet from the list. Open **Write the status** and pick the same Google account; it writes to the sheet you picked.\n4. Open **Send WhatsApp template**, add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys).\n5. Pick your approved template and its language. With a workspace key, also pick the WhatsApp number that sends in **Connection**; a connection key already names one.\n6. Turn the workflow on.\n\nTo send a row again, clear its **status**.\n\nTested on n8n 2.46.6 with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
+        "height": 600,
+        "width": 460,
         "color": 4
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a01",
@@ -13,8 +13,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -520,
-        -200
+        -540,
+        -240
       ]
     },
     {
@@ -29,7 +29,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -60,
+        180,
         200
       ]
     },
@@ -45,19 +45,48 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        280,
+        520,
         200
       ]
     },
     {
       "parameters": {
-        "pollTimes": {
-          "item": [
+        "content": "### The status column\nA row with any status is skipped, so each customer gets the message once.\n\n- **sent**: the message went out at the time in **sent_at**.\n- **failed**: Cosend's reason is in **error**. Fix the row, clear its status, and the next run sends it.\n\nEach run sends to at most 50 rows; the rest go in the next run.",
+        "height": 260,
+        "width": 360,
+        "color": 7
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a06",
+      "name": "Status column",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
             {
-              "mode": "everyMinute"
+              "field": "minutes",
+              "minutesInterval": 5
             }
           ]
-        },
+        }
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a07",
+      "name": "Every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
         "documentId": {
           "__rl": true,
           "value": "",
@@ -68,15 +97,72 @@
           "value": "",
           "mode": "list"
         },
-        "event": "rowAdded",
         "options": {}
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a04",
-      "name": "New row in Google Sheets",
-      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "name": "Read the sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2b01",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2b02",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a08",
+      "name": "Rows not sent yet",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": 50
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a09",
+      "name": "At most 50 a run",
+      "type": "n8n-nodes-base.limit",
       "typeVersion": 1,
       "position": [
-        0,
+        660,
         0
       ]
     },
@@ -97,7 +183,7 @@
           "mode": "name"
         },
         "templateLanguage": "en_US",
-        "templateComponents": "=[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"{{ $json.name }}\"}]}]",
+        "templateComponents": "={{ JSON.stringify([{ type: 'body', parameters: [{ type: 'text', text: String($json.name ?? '') }] }]) }}",
         "options": {}
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a05",
@@ -105,17 +191,257 @@
       "type": "n8n-nodes-cosend.cosend",
       "typeVersion": 1,
       "position": [
-        340,
+        880,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2b03",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a13",
+      "name": "Did it send?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c01",
+              "name": "row_number",
+              "value": "={{ $('Rows not sent yet').item.json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c02",
+              "name": "status",
+              "value": "sent",
+              "type": "string"
+            },
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c03",
+              "name": "sent_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c04",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a10",
+      "name": "Mark as sent",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c05",
+              "name": "row_number",
+              "value": "={{ $('Rows not sent yet').item.json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c06",
+              "name": "status",
+              "value": "failed",
+              "type": "string"
+            },
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c07",
+              "name": "sent_at",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2c08",
+              "name": "error",
+              "value": "={{ [$json.code, $json.error].filter(Boolean).join(': ') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a11",
+      "name": "Note the failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1320,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Read the sheet').params.documentId.value }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Read the sheet').params.sheetName.value }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a12",
+      "name": "Write the status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1540,
         0
       ]
     }
   ],
   "connections": {
-    "New row in Google Sheets": {
+    "Every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Read the sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read the sheet": {
+      "main": [
+        [
+          {
+            "node": "Rows not sent yet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rows not sent yet": {
+      "main": [
+        [
+          {
+            "node": "At most 50 a run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "At most 50 a run": {
       "main": [
         [
           {
             "node": "Send WhatsApp template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp template": {
+      "main": [
+        [
+          {
+            "node": "Did it send?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Did it send?": {
+      "main": [
+        [
+          {
+            "node": "Mark as sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Note the failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as sent": {
+      "main": [
+        [
+          {
+            "node": "Write the status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Note the failure": {
+      "main": [
+        [
+          {
+            "node": "Write the status",
             "type": "main",
             "index": 0
           }

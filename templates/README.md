@@ -5,7 +5,7 @@ carries sticky notes that walk you through setup on the canvas.
 
 | Template | File | Starts with |
 |---|---|---|
-| [Google Sheets to WhatsApp](#google-sheets-to-whatsapp) | [`google-sheets-to-whatsapp.json`](./google-sheets-to-whatsapp.json) | A new row in a sheet |
+| [Google Sheets to WhatsApp](#google-sheets-to-whatsapp) | [`google-sheets-to-whatsapp.json`](./google-sheets-to-whatsapp.json) | Every 5 minutes, the rows not sent yet |
 | [Receive WhatsApp messages](#receive-whatsapp-messages) | [`receive-whatsapp-messages.json`](./receive-whatsapp-messages.json) | A WhatsApp message |
 | [WhatsApp AI agent](#whatsapp-ai-agent) | [`whatsapp-ai-agent.json`](./whatsapp-ai-agent.json) | A WhatsApp message |
 
@@ -14,11 +14,15 @@ carries sticky notes that walk you through setup on the canvas.
 Every template needs:
 
 - **The Cosend community node.** In n8n, an owner or admin opens **Settings > Community nodes >
-  Install a community node** and enters `n8n-nodes-cosend`.
+  Install a community node** and enters `n8n-nodes-cosend`. n8n's
+  [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/)
+  covers each step.
 - **A Cosend API key.** In the [Cosend dashboard](https://dashboard.cosend.app), open
   **Settings > Developer > API keys** and create one. In n8n, add a **Cosend API** credential and
   paste it. A `cok_test_` or `csk_test_` key lets you build without sending live traffic.
 - **A WhatsApp number connected to Cosend.**
+
+Each template is tested with n8n-nodes-cosend 2026.11.0 (community node) on self-hosted n8n 2.46.6.
 
 ## How to import
 
@@ -38,23 +42,28 @@ Then open each node with a warning, pick your credential, and turn the workflow 
 
 ## Google Sheets to WhatsApp
 
-**What it does.** Each new row in a Google Sheet sends an approved WhatsApp template to the phone
-number in that row, with the row's name filled into the message.
+**What it does.** Every 5 minutes, each row of a Google Sheet with a phone number and no status
+gets an approved WhatsApp template, with the row's name filled into the message. The workflow then
+writes **sent** and the time into that row, or **failed** and Cosend's reason, so each row is sent
+once and every result is in the sheet. Each run sends to at most 50 rows; the rest go in the next
+run.
 
 **What you need.**
 
 - A Google account connected to n8n.
 - A sheet with a header row of **phone** and **name**. Numbers carry their country code, for
-  example `+44 7700 900123`; the workflow keeps the digits and adds the `+`.
+  example `+44 7700 900123`; the workflow keeps the digits and adds the `+`. The workflow adds the
+  **status**, **sent_at** and **error** columns the first time it writes.
 - An approved WhatsApp template with one body variable for the first name. Create it in the
   Cosend dashboard under **Templates**. Meta reviews every template, and a decision can take up to
   24 hours, so create it first.
 
 **How to import.** Import [`google-sheets-to-whatsapp.json`](./google-sheets-to-whatsapp.json),
-pick your sheet in **New row in Google Sheets**, then pick your template and its language in
-**Send WhatsApp template**. A template without variables takes `[]` in **Components**. A
-connection key already names the WhatsApp number that sends; with a workspace key, pick that number
-in **Connection** too.
+pick your sheet from the list in **Read the sheet**, and pick the same Google account in **Write
+the status**, which writes to that sheet. Then pick your template and its language in **Send
+WhatsApp template**. A template without variables takes `[]` in **Components**. A connection key
+already names the WhatsApp number that sends; with a workspace key, pick that number in
+**Connection** too. To send a row again, clear its **status**.
 
 ## Receive WhatsApp messages
 
