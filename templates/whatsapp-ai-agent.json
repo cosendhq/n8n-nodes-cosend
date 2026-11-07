@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.",
-        "height": 460,
+        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.\n\nTested with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
+        "height": 500,
         "width": 440,
         "color": 4
       },

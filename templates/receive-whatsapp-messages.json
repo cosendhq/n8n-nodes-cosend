@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Receive WhatsApp messages\n\nEach WhatsApp message your number receives starts this workflow. A keyword picks the reply, and anything else goes to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Edit the keywords in **Route by keyword** and the text in each reply.\n4. Turn the workflow on. Cosend connects to it by itself, so there is no URL to copy.\n\nSend **price** or **hours** to your business number to see it answer.",
-        "height": 440,
+        "content": "## Receive WhatsApp messages\n\nEach WhatsApp message your number receives starts this workflow. A keyword picks the reply, and anything else goes to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Edit the keywords in **Route by keyword** and the text in each reply.\n4. Turn the workflow on. Cosend connects to it by itself, so there is no URL to copy.\n\nSend **price** or **hours** to your business number to see it answer.\n\nTested with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
+        "height": 480,
         "width": 420,
         "color": 4
       },
