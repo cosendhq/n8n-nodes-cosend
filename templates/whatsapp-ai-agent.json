@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.\n\nTested with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
+        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** in Settings > Community nodes, following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/). On n8n 1.x, also set the environment variable **N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true** so the agent can use the Cosend tool.\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.\n\nTested on n8n 2.46.6 with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
         "height": 500,
         "width": 440,
         "color": 4
@@ -68,8 +68,7 @@
       "position": [
         0,
         0
-      ],
-      "webhookId": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e99"
+      ]
     },
     {
       "parameters": {

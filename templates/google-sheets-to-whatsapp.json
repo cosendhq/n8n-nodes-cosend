@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Google Sheets to WhatsApp\n\nEvery 5 minutes, each row of your sheet with a phone number and no status gets an approved WhatsApp template. The workflow then writes **sent** and the time into that row, or **failed** and the reason, so every row is sent once and you can see what happened.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** (Settings > Community nodes).\n2. Make a sheet with a header row of **phone** and **name**, one customer per row. The workflow adds the **status**, **sent_at** and **error** columns the first time it writes.\n3. Open **Read the sheet**, connect your Google account and pick your sheet from the list. Open **Write the status** and pick the same Google account; it writes to the sheet you picked.\n4. Open **Send WhatsApp template**, add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys).\n5. Pick your approved template and its language. With a workspace key, also pick the WhatsApp number that sends in **Connection**; a connection key already names one.\n6. Turn the workflow on.\n\nTo send a row again, clear its **status**.\n\nTested with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
+        "content": "## Google Sheets to WhatsApp\n\nEvery 5 minutes, each row of your sheet with a phone number and no status gets an approved WhatsApp template. The workflow then writes **sent** and the time into that row, or **failed** and the reason, so every row is sent once and you can see what happened.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** in Settings > Community nodes, following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).\n2. Make a sheet with a header row of **phone** and **name**, one customer per row. The workflow adds the **status**, **sent_at** and **error** columns the first time it writes.\n3. Open **Read the sheet**, connect your Google account and pick your sheet from the list. Open **Write the status** and pick the same Google account; it writes to the sheet you picked.\n4. Open **Send WhatsApp template**, add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys).\n5. Pick your approved template and its language. With a workspace key, also pick the WhatsApp number that sends in **Connection**; a connection key already names one.\n6. Turn the workflow on.\n\nTo send a row again, clear its **status**.\n\nTested on n8n 2.46.6 with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
         "height": 600,
         "width": 460,
         "color": 4
@@ -183,7 +183,7 @@
           "mode": "name"
         },
         "templateLanguage": "en_US",
-        "templateComponents": "=[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"{{ $json.name }}\"}]}]",
+        "templateComponents": "={{ JSON.stringify([{ type: 'body', parameters: [{ type: 'text', text: String($json.name ?? '') }] }]) }}",
         "options": {}
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a05",

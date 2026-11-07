@@ -14,7 +14,9 @@ carries sticky notes that walk you through setup on the canvas.
 Every template needs:
 
 - **The Cosend community node.** In n8n, an owner or admin opens **Settings > Community nodes >
-  Install a community node** and enters `n8n-nodes-cosend`.
+  Install a community node** and enters `n8n-nodes-cosend`. n8n's
+  [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/)
+  covers each step.
 - **A Cosend API key.** In the [Cosend dashboard](https://dashboard.cosend.app), open
   **Settings > Developer > API keys** and create one. In n8n, add a **Cosend API** credential and
   paste it. A `cok_test_` or `csk_test_` key lets you build without sending live traffic.
