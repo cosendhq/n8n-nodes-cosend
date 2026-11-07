@@ -1,0 +1,47 @@
+name: n8n-scan
+
+# After each successful n8n-publish run, scan the version it published with n8n's own scanner,
+# `npx @n8n/scan-community-package`, the check n8n's verification review runs. The job fails when
+# the scanner reports a failure. The scanner itself exits 0 then, so scripts/scan-published.sh
+# reads its output.
+#
+# A `workflow_run` workflow runs from the default branch's copy of this file. It reads
+# package.json from the commit n8n-publish ran on, which is the version `n8n-node release`
+# published. It changes nothing in n8n-publish.yml and has no publish rights.
+#
+# workflow_dispatch scans a version by hand, for example to rerun a scan.
+
+on:
+  workflow_run:
+    workflows: [n8n-publish]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published version to scan, for example 2026.11.1
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      # The commit n8n-publish ran on. A dispatch checks out the ref it was run from.
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Scan the published version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version="${INPUT_VERSION:-$(node -p "require('./package.json').version")}"
+          echo "Scanning n8n-nodes-cosend@$version."
+          bash scripts/scan-published.sh "$version"
