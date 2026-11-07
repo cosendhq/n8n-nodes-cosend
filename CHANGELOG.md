@@ -5,6 +5,39 @@ All notable changes to `n8n-nodes-cosend` are documented here. This project foll
 
 ## [Unreleased]
 
+## [2026.11.1] - 2026-11-07
+
+Changes for n8n's verification review. Workflows built on version 1 of either node keep working as
+they did.
+
+### Added
+
+- **Version 1.1 of Cosend and Cosend Trigger**, the default for new nodes.
+- **Simplify** on every Get and Get Many that returns a message, conversation, contact,
+  automation, run or run event: at most ten flat fields, on by default. The AI tool form has
+  **Output** instead: Simplified, Raw or Selected Fields, with the ID always included.
+- **Trigger: WhatsApp Number** is a list to pick from, or an ID.
+- **README:** an Example workflows section that links the three templates in `templates/`.
+
+### Changed
+
+- **Trigger Simplify** (1.1) returns the event name and the same simplified record the Cosend node
+  returns, at most ten fields.
+- **"Continue (using error output)"** now sends each failed item to the error output, with the
+  input item's fields, `error`, and `code`, `request_id` and `hint` under `details`. Before, it
+  stayed in the success output. Plain "Continue" is unchanged.
+- **Error messages** name the item a node stopped on, for example `[item 2]`, and say what to do
+  next in the dashboard's words: Numbers, On Phone, Passed to a Person.
+- **Dashboard terms:** WhatsApp Number for connection, Assistant for the bot control, Passed to a
+  Person for pending human, On Phone for app, Update Note for Edit Note, Assignee IDs for Assigned
+  Agent IDs, and Number events for Connection events. The stored values are unchanged.
+- **Descriptions** name the resource, and actions drop the article: "Send message", not "Send a
+  message".
+
+### Fixed
+
+- **Example IDs** in placeholders are valid Cosend IDs, so each one passes its own field's check.
+
 ## [2026.11.0] - 2026-11-05
 
 Versions are date-based from this release: `YYYY.M.N`, the year, the month and that month's

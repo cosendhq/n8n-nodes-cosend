@@ -6,6 +6,7 @@ import {
 	paginationProperties,
 	unwrapData,
 } from '../shared/descriptions';
+import { outputProperties } from '../shared/output';
 
 const show = { resource: ['contact'] };
 const on = (...operations: string[]) => ({ ...show, operation: operations });
@@ -34,7 +35,7 @@ export const contactDescription: INodeProperties[] = [
 			{
 				name: 'Add Tags',
 				value: 'addTags',
-				action: 'Add tags to a contact',
+				action: 'Add tags to contact',
 				description: 'Add tags to a contact. A tag it already has is left as it is.',
 				routing: {
 					request: { method: 'POST', url: '=/contacts/{{ $parameter.contactId }}/tags' },
@@ -43,23 +44,23 @@ export const contactDescription: INodeProperties[] = [
 			{
 				name: 'Create',
 				value: 'create',
-				action: 'Create a contact',
+				action: 'Create contact',
 				description:
-					"Add a contact. If this number already has one on this connection, you get that contact back unchanged. Use 'Create or Update' to update it.",
+					"Create a new contact. When the phone number already has one, Cosend returns that contact; use 'Create or Update' to change it.",
 				routing: { request: { method: 'POST', url: '/contacts' } },
 			},
 			{
 				name: 'Delete',
 				value: 'delete',
-				action: 'Delete a contact',
-				description: 'Remove a contact from the workspace',
+				action: 'Delete contact',
+				description: 'Delete a contact from the workspace',
 				routing: { request: { method: 'DELETE', url: '=/contacts/{{ $parameter.contactId }}' } },
 			},
 			{
 				name: 'Get',
 				value: 'get',
-				action: 'Get a contact',
-				description: 'Retrieve one contact by ID, phone number or WhatsApp business-scoped ID',
+				action: 'Get contact',
+				description: 'Retrieve one contact by ID, phone number or WhatsApp user ID',
 				routing: { request: { method: 'GET', url: '=/contacts/{{ $parameter.contactId }}' } },
 			},
 			{
@@ -72,7 +73,7 @@ export const contactDescription: INodeProperties[] = [
 			{
 				name: 'Remove Tags',
 				value: 'removeTags',
-				action: 'Remove tags from a contact',
+				action: 'Remove tags from contact',
 				description: 'Remove tags from a contact. A tag it does not have is ignored.',
 				routing: {
 					request: { method: 'DELETE', url: '=/contacts/{{ $parameter.contactId }}/tags' },
@@ -81,8 +82,8 @@ export const contactDescription: INodeProperties[] = [
 			{
 				name: 'Update',
 				value: 'update',
-				action: 'Update a contact',
-				description: 'Change the stored details of an existing contact',
+				action: 'Update contact',
+				description: 'Update the details of an existing contact',
 				routing: { request: { method: 'PATCH', url: '=/contacts/{{ $parameter.contactId }}' } },
 			},
 			{
@@ -90,7 +91,7 @@ export const contactDescription: INodeProperties[] = [
 				// "Create or Update" with exactly this description (`node-param-*-wrong-for-upsert`).
 				name: 'Create or Update',
 				value: 'upsert',
-				action: 'Create or update a contact',
+				action: 'Create or update contact',
 				description: 'Create a new record, or update the current one if it already exists (upsert)',
 			},
 		],
@@ -126,7 +127,7 @@ export const contactDescription: INodeProperties[] = [
 			required: true,
 			// `createContactRequest.connection_id` is a required string, not an optional one — a
 			// contact belongs to one WhatsApp number, so there is no workspace-wide contact.
-			description: 'The WhatsApp connection this contact belongs to',
+			description: 'The WhatsApp number this contact belongs to',
 		}),
 		displayOptions: { show: on('create', 'upsert') },
 		routing: { send: { type: 'body', property: 'connection_id' } },
@@ -138,7 +139,7 @@ export const contactDescription: INodeProperties[] = [
 		default: '',
 		required: true,
 		placeholder: 'e.g. +919876543210',
-		description: "The contact's WhatsApp number in E.164 format, including the country code",
+		description: "The contact's WhatsApp number, starting with + and the country code",
 		displayOptions: { show: on('create', 'upsert') },
 		routing: { send: { type: 'body', property: 'phone_e164' } },
 	},
@@ -194,7 +195,7 @@ export const contactDescription: INodeProperties[] = [
 				default: '',
 				placeholder: 'e.g. vip,india',
 				description:
-					'Comma-separated labels for this contact. This REPLACES the existing tags rather than adding to them.',
+					'Comma-separated tags. These become the contact’s tags, in place of the ones it has.',
 				routing: {
 					send: {
 						type: 'body',
@@ -209,7 +210,7 @@ export const contactDescription: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				placeholder: 'e.g. Asia/Kolkata',
-				description: "The contact's IANA timezone identifier, never a UTC offset",
+				description: "The contact's time zone as a place name, for example 'Asia/Kolkata'",
 				routing: { send: { type: 'body', property: 'timezone' } },
 			},
 		],
@@ -238,7 +239,7 @@ export const contactDescription: INodeProperties[] = [
 			{
 				...connectionLocator({
 					required: false,
-					description: 'Only return contacts belonging to this WhatsApp connection',
+					description: 'Only return contacts belonging to this WhatsApp number',
 				}),
 				routing: { send: { type: 'query', property: 'connection_id' } },
 			},
@@ -259,8 +260,7 @@ export const contactDescription: INodeProperties[] = [
 				// A2 §5.6: "`tags` is an array with `?tag=vip&tag=india` (AND semantics)". The API
 				// reads a repeated parameter, so an array value is the honest shape here, and the
 				// description says AND because that is what it does — not OR.
-				description:
-					'Comma-separated tags. A contact must carry ALL of them to be returned, not just one.',
+				description: 'Comma-separated tags. Only contacts carrying every one of them are returned.',
 				routing: {
 					send: {
 						type: 'query',
@@ -271,4 +271,7 @@ export const contactDescription: INodeProperties[] = [
 			},
 		],
 	},
+
+	// ── get, getAll: Simplify, or the tool's Output ───────────────────────────────────────────
+	...outputProperties(on('get', 'getAll'), 'contact'),
 ];

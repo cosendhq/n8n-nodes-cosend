@@ -3,11 +3,10 @@ import type {
 	IExecuteFunctions,
 	IN8nHttpFullResponse,
 	INodeExecutionData,
-	JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError, NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
-import { cosendApiRequest, failureJsonOf } from '../shared/transport';
+import { cosendApiRequest, failureItem, failureJsonOf, withItem } from '../shared/transport';
 import { locatorValue, parseJson } from './messageBody';
 
 /**
@@ -132,16 +131,12 @@ export async function upsertContact(this: IExecuteFunctions): Promise<INodeExecu
 			results.push({ json: updated, pairedItem: { item: i } });
 		} catch (error) {
 			if (this.continueOnFail()) {
-				results.push({ json: failureJsonOf(error), pairedItem: { item: i } });
+				results.push(failureItem(this.getNode(), failureJsonOf(error), i));
 				continue;
 			}
 			// Both possible errors are already n8n's own classes, carrying the parameter or the
 			// API's code; wrapping them again would bury the message that names the problem.
-			const failure =
-				error instanceof NodeApiError || error instanceof NodeOperationError
-					? error
-					: new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
-			throw failure;
+			throw withItem(this.getNode(), error, i);
 		}
 	}
 

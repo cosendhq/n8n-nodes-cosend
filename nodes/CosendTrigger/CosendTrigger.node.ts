@@ -8,9 +8,11 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
+import { searchConnections } from '../Cosend/listSearch';
+import { connectionLocator } from '../Cosend/shared/descriptions';
 import { cosendApiRequest, cosendApiRequestAllItems } from '../Cosend/shared/transport';
 import { verifyCosendSignature } from './signature';
-import { type CosendEventEnvelope, simplifyEvent } from './simplify';
+import { type CosendEventEnvelope, simplifiedEvent, simplifyEvent } from './simplify';
 
 interface CosendWebhookStaticData {
 	webhookId?: string;
@@ -98,6 +100,12 @@ async function wantedFilters(this: IHookFunctions): Promise<EndpointFilters> {
 	return wanted;
 }
 
+/** The WhatsApp number picked: text on version 1, a list pick (or an ID) from 1.1. */
+function connectionOf(this: IHookFunctions): string {
+	const value = this.getNodeParameter('connectionId', '', { extractValue: true });
+	return typeof value === 'string' ? value : '';
+}
+
 /** Include Contact is on unless switched off, as Simplify is. */
 function wantsContact(this: IHookFunctions): boolean {
 	const options = this.getNodeParameter('options', {}) as IDataObject;
@@ -150,31 +158,6 @@ const EVENT_OPTIONS = [
 		name: 'Automation Switched Off',
 		value: 'automation.auto_disabled',
 		description: 'Cosend switched an automation off by itself. The event says why.',
-	},
-	{
-		name: 'Connection Connected',
-		value: 'connection.connected',
-		description: 'A WhatsApp number finished connecting to Cosend',
-	},
-	{
-		name: 'Connection Disconnected',
-		value: 'connection.disconnected',
-		description: 'A WhatsApp connection stopped working',
-	},
-	{
-		name: 'Connection Messaging Limit Changed',
-		value: 'connection.limit_changed',
-		description: 'Meta changed how many people a WhatsApp number may start conversations with',
-	},
-	{
-		name: 'Connection Needs Reauthorization',
-		value: 'connection.needs_reauth',
-		description: 'A WhatsApp connection needs the owner to sign in again',
-	},
-	{
-		name: 'Connection Quality Changed',
-		value: 'connection.quality_changed',
-		description: 'Meta changed the quality rating of a WhatsApp number',
 	},
 	{
 		name: 'Contact Consent Changed',
@@ -273,6 +256,31 @@ const EVENT_OPTIONS = [
 		description: 'A queued notification went out',
 	},
 	{
+		name: 'Number Connected',
+		value: 'connection.connected',
+		description: 'A WhatsApp number finished connecting to Cosend',
+	},
+	{
+		name: 'Number Disconnected',
+		value: 'connection.disconnected',
+		description: 'A WhatsApp number stopped working with Cosend',
+	},
+	{
+		name: 'Number Messaging Limit Changed',
+		value: 'connection.limit_changed',
+		description: 'Meta changed how many people a WhatsApp number may start conversations with',
+	},
+	{
+		name: 'Number Needs Reconnecting',
+		value: 'connection.needs_reauth',
+		description: 'A WhatsApp number needs the owner to reconnect it',
+	},
+	{
+		name: 'Number Quality Changed',
+		value: 'connection.quality_changed',
+		description: 'Meta changed the quality rating of a WhatsApp number',
+	},
+	{
 		name: 'Onboarding Completed',
 		value: 'onboarding.completed',
 		description: 'A customer finished connecting their WhatsApp number',
@@ -280,7 +288,7 @@ const EVENT_OPTIONS = [
 	{
 		name: 'Onboarding Failed',
 		value: 'onboarding.failed',
-		description: 'A customer’s WhatsApp connection attempt failed',
+		description: 'A customer’s attempt to connect a WhatsApp number did not finish',
 	},
 	{
 		name: 'Onboarding Progress',
@@ -308,7 +316,10 @@ export class CosendTrigger implements INodeType {
 		name: 'cosendTrigger',
 		icon: { light: 'file:../../icons/cosend.svg', dark: 'file:../../icons/cosend.dark.svg' },
 		group: ['trigger'],
-		version: 1,
+		// 1.1: 'WhatsApp Number' is picked from a list, and Simplify returns the event's record in the
+		// action node's simplified shape. A workflow built on 1 keeps 1 and the output it reads.
+		version: [1, 1.1],
+		defaultVersion: 1.1,
 		subtitle: '={{$parameter["events"].join(", ")}}',
 		description: 'Starts a workflow when something happens in Cosend',
 		defaults: { name: 'Cosend Trigger' },
@@ -332,13 +343,22 @@ export class CosendTrigger implements INodeType {
 				options: EVENT_OPTIONS,
 			},
 			{
-				displayName: 'Connection Name or ID',
+				displayName: 'WhatsApp Number ID',
 				name: 'connectionId',
 				type: 'string',
 				default: '',
-				placeholder: 'e.g. conn_01H8XK3M9PQRSTUVWXYZ01',
+				placeholder: 'e.g. conn_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 				description:
-					'Only receive events for this WhatsApp connection. Leave empty for every connection in the workspace. Cosend applies this filter itself.',
+					'Only receive events for this WhatsApp number. Leave empty for every number in the workspace. Cosend applies this filter itself.',
+				displayOptions: { show: { '@version': [1] } },
+			},
+			{
+				...connectionLocator({
+					required: false,
+					description:
+						'Only receive events for this WhatsApp number. Leave empty for every number in the workspace. Cosend applies this filter itself.',
+				}),
+				displayOptions: { show: { '@version': [{ _cnd: { gte: 1.1 } }] } },
 			},
 			{
 				displayName: 'Ignore Messages Sent by Me',
@@ -358,20 +378,20 @@ export class CosendTrigger implements INodeType {
 					'Narrow down which events reach the workflow. Cosend applies these filters itself and delivers only the events that match. Each filter applies to the events its description names and lets every other event through.',
 				options: [
 					{
-						displayName: 'Assigned Agent IDs',
+						displayName: 'Assignee IDs',
 						name: 'assigneeIds',
 						type: 'string',
 						default: '',
-						placeholder: 'e.g. usr_01H8XK3M9PQRSTUVWXYZ01',
+						placeholder: 'e.g. usr_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 						description:
-							'Comma-separated IDs of team members. Only continue when the conversation is assigned to one of them. Applies to message and conversation events.',
+							'Comma-separated user IDs of team members. Only continue when the conversation is assigned to one of them. Applies to message and conversation events.',
 					},
 					{
 						displayName: 'Automation IDs',
 						name: 'automationIds',
 						type: 'string',
 						default: '',
-						placeholder: 'e.g. aut_01H8XK3M9PQRSTUVWXYZ01',
+						placeholder: 'e.g. aut_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 						description:
 							'Comma-separated automation IDs. Only continue for runs and approvals of one of these automations. Applies to automation and approval events.',
 					},
@@ -390,7 +410,7 @@ export class CosendTrigger implements INodeType {
 						type: 'multiOptions',
 						default: [],
 						description:
-							'Only continue for these kinds of message. Applies to every message event, sent messages and status changes included: pick Template to keep the status changes of template sends.',
+							"Only continue for these kinds of message. Applies to every message event, sent messages and status changes included: pick 'Template' to keep the status changes of template sends.",
 						// Every type `filters.message_types` accepts, so no message event is out of reach.
 						options: [
 							{ name: 'Audio', value: 'audio' },
@@ -447,11 +467,15 @@ export class CosendTrigger implements INodeType {
 						type: 'boolean',
 						default: true,
 						description:
-							'Whether to return the resource itself with the event name attached, instead of Cosend’s full event envelope',
+							'Whether to return a simplified version of the response instead of the raw data',
 					},
 				],
 			},
 		],
+	};
+
+	methods = {
+		listSearch: { searchConnections },
 	};
 
 	webhookMethods = {
@@ -468,7 +492,7 @@ export class CosendTrigger implements INodeType {
 
 				const webhookUrl = this.getNodeWebhookUrl('default');
 				const events = this.getNodeParameter('events') as string[];
-				const connectionId = this.getNodeParameter('connectionId', '') as string;
+				const connectionId = connectionOf.call(this);
 
 				let endpoints: EndpointRecord[];
 				try {
@@ -542,7 +566,7 @@ export class CosendTrigger implements INodeType {
 					);
 				}
 
-				const connectionId = this.getNodeParameter('connectionId', '') as string;
+				const connectionId = connectionOf.call(this);
 
 				// `createEndpointRequest` is `.strict()`: `url`, `events`, an optional `connection_id`,
 				// `filters` and `include_contact`. Anything else (Doc 03 §5.12's draft also sent
@@ -691,7 +715,12 @@ export class CosendTrigger implements INodeType {
 		if (envelope.type === 'ping') return { webhookResponse: { received: true } };
 
 		const options = this.getNodeParameter('options', {}) as IDataObject;
-		const payload = options.simplify === false ? envelope : simplifyEvent(envelope);
+		const payload =
+			options.simplify === false
+				? envelope
+				: this.getNode().typeVersion >= 1.1
+					? simplifiedEvent(envelope)
+					: simplifyEvent(envelope);
 
 		return { workflowData: [this.helpers.returnJsonArray([payload])] };
 	}

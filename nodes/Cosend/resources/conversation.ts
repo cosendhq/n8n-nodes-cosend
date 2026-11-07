@@ -6,6 +6,7 @@ import {
 	paginationProperties,
 	unwrapData,
 } from '../shared/descriptions';
+import { outputProperties } from '../shared/output';
 
 const show = { resource: ['conversation'] };
 const on = (...operations: string[]) => ({ ...show, operation: operations });
@@ -28,7 +29,7 @@ export const conversationDescription: INodeProperties[] = [
 			{
 				name: 'Add Note',
 				value: 'addNote',
-				action: 'Add a note to a conversation',
+				action: 'Add note to conversation',
 				description:
 					'Attach an internal note. Notes are visible to your team in the Cosend inbox and are never sent to the contact.',
 				routing: {
@@ -38,9 +39,9 @@ export const conversationDescription: INodeProperties[] = [
 			{
 				name: 'Delete Note',
 				value: 'deleteNote',
-				action: 'Delete a note from a conversation',
+				action: 'Delete note from conversation',
 				description:
-					'Remove an internal note. Only its author, or an owner or admin of the workspace, can.',
+					'Delete an internal note from a conversation. Its author, or an owner or admin, can do this.',
 				routing: {
 					request: {
 						method: 'DELETE',
@@ -49,11 +50,11 @@ export const conversationDescription: INodeProperties[] = [
 				},
 			},
 			{
-				name: 'Edit Note',
+				name: 'Update Note',
 				value: 'editNote',
-				action: 'Edit a note on a conversation',
+				action: 'Update note on conversation',
 				description:
-					'Change the text of an internal note. Only its author can. Who the note mentions stays as it was.',
+					'Update the text of an internal note on a conversation. Its author can do this; the people it mentions stay the same.',
 				routing: {
 					request: {
 						method: 'PATCH',
@@ -64,8 +65,8 @@ export const conversationDescription: INodeProperties[] = [
 			{
 				name: 'Get',
 				value: 'get',
-				action: 'Get a conversation',
-				description: 'Retrieve one conversation with its messaging-window and lock state',
+				action: 'Get conversation',
+				description: 'Retrieve one conversation with its messaging window and lock state',
 				routing: {
 					request: { method: 'GET', url: '=/conversations/{{ $parameter.conversationId }}' },
 				},
@@ -80,9 +81,9 @@ export const conversationDescription: INodeProperties[] = [
 			{
 				name: 'Mark as Read',
 				value: 'markRead',
-				action: 'Mark a conversation as read',
+				action: 'Mark conversation as read',
 				description:
-					'Clear the unread count in the Cosend inbox. This is your team’s read state, not the blue ticks on the contact’s phone. Use the message operation for those.',
+					'Mark a conversation as read in the Cosend inbox, for your team. Blue ticks on the contact’s phone come from Message: Mark as Read.',
 				routing: {
 					request: { method: 'POST', url: '=/conversations/{{ $parameter.conversationId }}/read' },
 				},
@@ -90,8 +91,8 @@ export const conversationDescription: INodeProperties[] = [
 			{
 				name: 'Set Control',
 				value: 'setControl',
-				action: 'Set control of a conversation',
-				description: 'Hand a conversation from the automation to a human',
+				action: 'Set control of conversation',
+				description: 'Pass a conversation from the assistant to a person on your team',
 				routing: {
 					request: {
 						method: 'POST',
@@ -102,8 +103,8 @@ export const conversationDescription: INodeProperties[] = [
 			{
 				name: 'Update',
 				value: 'update',
-				action: 'Update a conversation',
-				description: 'Change the state, assignee, labels or snooze time',
+				action: 'Update conversation',
+				description: 'Update a conversation’s state, assignee, labels or snooze time',
 				routing: {
 					request: { method: 'PATCH', url: '=/conversations/{{ $parameter.conversationId }}' },
 				},
@@ -147,13 +148,12 @@ export const conversationDescription: INodeProperties[] = [
 			{
 				name: 'Human',
 				value: 'human',
-				description: 'A person is answering now. The automation stops for this conversation.',
+				description: 'A person on your team is answering now, and the assistant stays quiet',
 			},
 			{
-				name: 'Pending Human',
+				name: 'Passed to a Person',
 				value: 'pending_human',
-				description:
-					'The automation passed this to a person. It waits in the inbox until someone picks it up.',
+				description: 'The conversation waits in the inbox for a person on your team',
 			},
 		],
 		routing: { send: { type: 'body', property: 'control' } },
@@ -167,11 +167,11 @@ export const conversationDescription: INodeProperties[] = [
 		displayOptions: { show: on('setControl') },
 		options: [
 			{
-				displayName: 'Pause Bot Until',
+				displayName: 'Pause Assistant Until',
 				name: 'pauseBotUntil',
 				type: 'dateTime',
 				default: '',
-				description: 'When the automation may resume. Leave empty and the handover is permanent.',
+				description: 'When the assistant may answer again. Leave empty to keep the conversation with your team.',
 				routing: { send: { type: 'body', property: 'pause_bot_until' } },
 			},
 			{
@@ -193,8 +193,8 @@ export const conversationDescription: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		required: true,
-		placeholder: 'e.g. note_01H8XK3M9PQRSTUVWXYZ01ABCD',
-		description: 'The note to change. Add Note returns it as the note’s ID.',
+		placeholder: 'e.g. note_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
+		description: "The note to change. 'Add Note' returns its ID.",
 		displayOptions: { show: on('editNote', 'deleteNote') },
 	},
 	{
@@ -213,9 +213,9 @@ export const conversationDescription: INodeProperties[] = [
 		name: 'mentions',
 		type: 'string',
 		default: '',
-		placeholder: 'e.g. mem_01H8XK…,mem_01H8XL…',
+		placeholder: 'e.g. usr_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 		description:
-			'Comma-separated membership IDs to notify about this note. Leave empty to notify nobody.',
+			'Comma-separated user IDs of team members to notify about this note. Leave empty to notify nobody.',
 		displayOptions: { show: on('addNote') },
 		routing: {
 			send: {
@@ -240,9 +240,9 @@ export const conversationDescription: INodeProperties[] = [
 				name: 'assigneeId',
 				type: 'string',
 				default: '',
-				placeholder: 'e.g. mem_01H8XK3M9PQRSTUVWXYZ01',
+				placeholder: 'e.g. usr_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 				description:
-					'The membership ID of the team member who owns this conversation. Set it empty to unassign.',
+					'The user ID of the team member who owns this conversation. Leave it empty to unassign.',
 				routing: { send: { type: 'body', property: 'assignee_id' } },
 			},
 			{
@@ -252,7 +252,7 @@ export const conversationDescription: INodeProperties[] = [
 				default: '',
 				placeholder: 'e.g. refund,urgent',
 				description:
-					'Comma-separated labels. This REPLACES the conversation’s labels rather than adding to them.',
+					'Comma-separated labels. These become the conversation’s labels, in place of the ones it has.',
 				routing: {
 					send: {
 						type: 'body',
@@ -267,7 +267,7 @@ export const conversationDescription: INodeProperties[] = [
 				type: 'dateTime',
 				default: '',
 				description:
-					"When a snoozed conversation returns to the inbox. Only meaningful with State set to 'Snoozed'.",
+					"When a snoozed conversation returns to the inbox. Used with 'State' set to 'Snoozed'.",
 				routing: { send: { type: 'body', property: 'snoozed_until' } },
 			},
 			{
@@ -314,13 +314,14 @@ export const conversationDescription: INodeProperties[] = [
 				name: 'assigneeId',
 				type: 'string',
 				default: '',
-				description: 'Only return conversations owned by this team member',
+				placeholder: 'e.g. usr_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
+				description: 'Only return conversations owned by this team member, by user ID',
 				routing: { send: { type: 'query', property: 'assignee_id' } },
 			},
 			{
 				...connectionLocator({
 					required: false,
-					description: 'Only return conversations on this WhatsApp connection',
+					description: 'Only return conversations on this WhatsApp number',
 				}),
 				routing: { send: { type: 'query', property: 'connection_id' } },
 			},
@@ -334,17 +335,17 @@ export const conversationDescription: INodeProperties[] = [
 				// the coexistence case the product exists for. Only *setting* it is refused.
 				description: 'Only return conversations under this kind of control',
 				options: [
+					{ name: 'Assistant', value: 'bot', description: 'The assistant is answering' },
+					{ name: 'Human', value: 'human', description: 'A person on your team is answering' },
 					{
-						name: 'App',
+						name: 'On Phone',
 						value: 'app',
 						description: 'The owner is replying from the WhatsApp Business app on their phone',
 					},
-					{ name: 'Bot', value: 'bot', description: 'An automation is answering' },
-					{ name: 'Human', value: 'human', description: 'A person on your team is answering' },
 					{
-						name: 'Pending Human',
+						name: 'Passed to a Person',
 						value: 'pending_human',
-						description: 'Waiting in the queue for a person on your team to pick up',
+						description: 'Waiting in the inbox for a person on your team',
 					},
 				],
 				routing: { send: { type: 'query', property: 'control' } },
@@ -381,4 +382,7 @@ export const conversationDescription: INodeProperties[] = [
 			},
 		],
 	},
+
+	// ── get, getAll: Simplify, or the tool's Output ───────────────────────────────────────────
+	...outputProperties(on('get', 'getAll'), 'conversation'),
 ];

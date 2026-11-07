@@ -22,7 +22,9 @@ tools. It works on every Cosend plan, including Free.
 
 ## Installation
 
-Install it by name from Settings → Community nodes.
+Install it by name from Settings → Community nodes. n8n's
+[community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/)
+covers each step.
 
 **From settings.** An owner or admin of the n8n instance opens **Settings → Community nodes →
 Install a community node**, enters `n8n-nodes-cosend`, and clicks **Install**. Everyone on the
@@ -57,6 +59,26 @@ host.
 **API key credentials.** A workflow runs unattended, so the credential here is a long-lived,
 revocable API key.
 
+## Example workflows
+
+Three ready-to-import workflows live in [`templates/`](./templates), each with sticky notes that
+walk you through setup on the canvas:
+
+- [**Google Sheets to WhatsApp**](./templates/google-sheets-to-whatsapp.json): every 5 minutes,
+  send an approved template to each new row of a sheet, then write **sent** or **failed** back
+  into the row.
+- [**Receive WhatsApp messages**](./templates/receive-whatsapp-messages.json): reply by keyword,
+  and pass every other message to your team in the Cosend inbox.
+- [**WhatsApp AI agent**](./templates/whatsapp-ai-agent.json): n8n's AI Agent answers each
+  message, remembers the chat, and passes it to a person when the customer asks for one.
+
+[`templates/README.md`](./templates/README.md) explains how to import them and what each one needs.
+
+A first workflow by hand takes two nodes. Add **Cosend Trigger** with the event **Message
+Received**, then a **Cosend** node set to **Message → Send**, with **Send To** set to
+**Conversation** and the conversation ID taken from the trigger: `{{ $json.conversation_id }}`.
+Every message your number receives now gets that reply.
+
 ## Operations
 
 ### Message
@@ -66,7 +88,7 @@ revocable API key.
 | Send | Send one WhatsApp message per input item: text, media, template, interactive, location or contact cards. Media comes from a binary field, a URL or a media ID |
 | Send Batch | Send every input item in one request, up to 100 at a time, with a per-item result |
 | Get | Retrieve one message by its Cosend ID or its WhatsApp message ID |
-| Get Many | List messages, filtered by conversation, contact, connection, direction, source or status |
+| Get Many | List messages, filtered by conversation, contact, WhatsApp number, direction, source or status |
 | Mark as Read | Put blue ticks on the contact's phone |
 | React | Add an emoji reaction, or clear the one already there |
 
@@ -74,10 +96,10 @@ revocable API key.
 
 | Operation | What it does |
 |---|---|
-| Create | Add a contact. If the number already has one on that connection, you get it back unchanged |
+| Create | Add a contact. If the phone number already has one on that WhatsApp number, you get it back unchanged |
 | Create or Update | The upsert: find the contact by phone number and update it, or create it if there is none, with no IF node in front |
 | Get | One contact, by ID, phone number or WhatsApp business-scoped ID |
-| Get Many | List contacts, filtered by search text, tags or connection |
+| Get Many | List contacts, filtered by search text, tags or WhatsApp number |
 | Update | Change name, attributes, tags, locale, timezone or blocked state. Tags set here replace the contact's whole list |
 | Add Tags | Add tags to a contact; the tags it already has stay |
 | Remove Tags | Take tags off a contact; the others stay |
@@ -88,19 +110,19 @@ revocable API key.
 | Operation | What it does |
 |---|---|
 | Get | One conversation, with its messaging-window and lock state |
-| Get Many | List conversations, filtered by state, control, assignee, connection, label or unread |
+| Get Many | List conversations, filtered by state, control, assignee, WhatsApp number, label or unread |
 | Update | Change state, assignee, labels or snooze time. Closing a conversation is Update with a state of Resolved |
-| Set Control | Hand a conversation from the automation to a human |
+| Set Control | Hand a conversation from the assistant to a person |
 | Mark as Read | Clear the unread count in the Cosend inbox |
 | Add Note | Attach an internal note your team sees and the contact never does |
-| Edit Note | Change the text of a note; who it mentions stays as it was. Only the person who wrote it can |
+| Update Note | Change the text of a note; who it mentions stays as it was. Only the person who wrote it can |
 | Delete Note | Remove a note. The person who wrote it, or an owner or admin, can |
 
 A conversation opens with its first message.
 
-- **Automation handover is one-way.** `Set Control` hands a conversation from the automation to a
-  person, as `Human` or `Pending Human`.
-- **`App` control is observed, never set.** Cosend records it when the owner replies from their
+- **Handover goes one way.** `Set Control` hands a conversation from the assistant to a person, as
+  `Human` or `Passed to a Person`.
+- **`On Phone` is observed, never set.** Cosend records it when the owner replies from their
   phone. You can *filter* conversations by it; you cannot assign it.
 
 ### Automation
@@ -139,6 +161,19 @@ A conversation opens with its first message.
 |---|---|
 | Get | The calling credential, its workspace, plan and limits |
 
+### Simplify and Output
+
+Every Get and Get Many that returns a message, conversation, contact, automation, run or run event
+has **Simplify**, on by default: it returns at most ten flat fields, the most useful first, with
+the ID among them. Turn it off for the record exactly as Cosend sends it.
+
+When an AI Agent uses the node as a tool, the same operations have **Output** instead:
+**Simplified**, **Raw**, or **Selected Fields**, which returns only the fields you pick, plus the
+ID.
+
+Simplify and Output come with node version 1.1. A workflow built on version 1 keeps returning the
+full record, so nothing changes under it.
+
 ## Trigger events
 
 **Cosend Trigger** registers a webhook with Cosend when the workflow is activated and removes it
@@ -161,8 +196,8 @@ its events no longer match the workflow, it is replaced rather than left pointin
 | Automation Run Started / Finished / Failed | An automation run began or reached its end |
 | Automation Switched Off | Cosend switched an automation off by itself, and says why |
 | Approval Requested / Decided | An automation is waiting on someone's approval, or got it |
-| Connection Connected / Disconnected / Needs Reauthorization | Your WhatsApp connection changed state |
-| Connection Quality Changed / Messaging Limit Changed | Meta changed the number's quality rating or messaging limit |
+| Number Connected / Disconnected / Needs Reconnecting | Your WhatsApp number changed state |
+| Number Quality Changed / Messaging Limit Changed | Meta changed the number's quality rating or messaging limit |
 | Onboarding Progress / Completed / Failed | A customer moved through connecting their number |
 | Notification Sent / Delivered / Failed / Expired | A queued notification reached a terminal state |
 | Template Status Changed | Meta approved, rejected or paused one of your templates |
@@ -173,9 +208,13 @@ raw body, compared in constant time) before it does anything else, and refuses a
 more than five minutes ago. A delivery that fails the check gets a `401` and starts no workflow.
 A test delivery from the dashboard (`ping`) is answered and starts no workflow either.
 
-**Simplify** is on by default and emits the resource with the event name attached: the same shape
-a `Cosend → Get` node returns, so one workflow can parse both. Turn it off for the full event
-envelope, including `previous_attributes` on update events.
+**Simplify** is on by default and emits the event name with the resource in the same simplified
+shape a `Cosend → Get` node returns, at most ten fields, so one workflow can parse both. Turn it
+off for the full event envelope, including `previous_attributes` on update events. A trigger built
+on version 1 keeps its earlier Simplify: the whole resource with the event name attached.
+
+**WhatsApp Number** picks the number the trigger listens to, from a list. Leave it empty to
+listen to every number the key reaches.
 
 **Filters run on Cosend's server.** The trigger registers them with its webhook, and Cosend
 delivers only the events that match, so an event a filter leaves out never starts an execution.
@@ -186,7 +225,7 @@ Each filter applies to its own events and lets every other event through:
 | Message Types | Message events, sent messages and status changes included | The message is one of these kinds (pick Template to keep the status changes of template sends) |
 | Statuses | Message Status Changed | The status is one of these |
 | Labels | Message and conversation events | The conversation carries at least one of these labels |
-| Assigned Agent IDs | Message and conversation events | The conversation is assigned to one of these team members |
+| Assignee IDs | Message and conversation events | The conversation is assigned to one of these team members |
 | Automation IDs | Automation and approval events | The run or approval belongs to one of these automations |
 | **Ignore Messages Sent by Me** (on by default) | Message Sent, Message Status Changed | The message was not sent with this credential's API key, so a workflow that sends a message does not start itself again. The status changes of those messages are left out too: turn it off to track their delivery |
 
@@ -209,11 +248,18 @@ tell you so rather than activating into silence. Two ways round it:
 
 ## Errors
 
-A failed operation carries Cosend's own explanation. With **On Error → Continue**, the failed item's
-output has `error` (what happened), `code` (the code in [the error reference](https://cosend.app/docs/errors)),
-`request_id` (the one to quote to Cosend support) and, for the common cases, `hint`: what to do
-next. When the node stops on an error instead, the same `code` and `request_id` are on the error's
-context.
+A failed operation carries Cosend's own explanation, and a stopped node names the item it stopped
+on, for example `[item 2]`.
+
+- **On Error → Continue** keeps the failed item in the output, with `error` (what happened),
+  `code` (the code in [the error reference](https://cosend.app/docs/errors)), `request_id` (the
+  one to quote to Cosend support) and, for the common cases, `hint`: what to do next.
+- **On Error → Continue (using error output)** sends each failed item to the node's error output,
+  and the items that worked to the success output. The failed item keeps the input item's fields
+  and adds `error`, with `code`, `request_id` and `hint` under `details`. n8n sends an item to the
+  error output only when its own fields are `error` and `details`, which is why they sit there.
+- When the node stops on an error instead, the same `code` and `request_id` are on the error's
+  context.
 
 ## Compatibility
 

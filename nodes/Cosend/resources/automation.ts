@@ -7,6 +7,7 @@ import {
 	sendWithIdempotencyKey,
 	unwrapData,
 } from '../shared/descriptions';
+import { outputProperties } from '../shared/output';
 
 const show = { resource: ['automation'] };
 const on = (...operations: string[]) => ({ ...show, operation: operations });
@@ -32,23 +33,23 @@ export const automationDescription: INodeProperties[] = [
 				name: 'Get Many',
 				value: 'getAll',
 				action: 'Get many automations',
-				description: 'List your automations, with how each one ran today',
+				description: 'Retrieve a list of automations, with how each one ran today',
 				routing: { request: { method: 'GET', url: '/automations' }, ...unwrapData },
 			},
 			{
 				name: 'Get Run',
 				value: 'getRun',
-				action: 'Get an automation run',
+				action: 'Get automation run',
 				description:
-					'Retrieve one run: its state, when it started and finished, and why it stopped',
+					'Retrieve one automation run: its state, when it started and finished, and why it stopped',
 				routing: { request: { method: 'GET', url: '=/runs/{{ $parameter.runId }}' } },
 			},
 			{
 				name: 'Get Run Events',
 				value: 'getRunEvents',
-				action: 'Get the events of an automation run',
+				action: 'Get events of automation run',
 				description:
-					'Retrieve the step-by-step trace of one run, so you can see which step failed and why',
+					'Retrieve the step-by-step trace of one automation run, to see what each step did',
 				routing: {
 					request: { method: 'GET', url: '=/runs/{{ $parameter.runId }}/events' },
 					...unwrapData,
@@ -57,9 +58,9 @@ export const automationDescription: INodeProperties[] = [
 			{
 				name: 'Trigger',
 				value: 'trigger',
-				action: 'Trigger an automation',
+				action: 'Trigger automation',
 				description:
-					'Start one run of an automation by hand. The answer is the run, which you can read again with Get Run.',
+					"Start one run of an automation. It returns the run, which 'Get Run' reads again.",
 				routing: {
 					request: { method: 'POST', url: '/runs' },
 					...sendWithIdempotencyKey,
@@ -89,7 +90,7 @@ export const automationDescription: INodeProperties[] = [
 				displayName: 'ID',
 				name: 'id',
 				type: 'string',
-				placeholder: 'e.g. aut_01H8XK3M9PQRSTUVWXYZ01ABCD',
+				placeholder: 'e.g. aut_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 				validation: [
 					{
 						type: 'regex',
@@ -138,9 +139,9 @@ export const automationDescription: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		required: true,
-		placeholder: 'e.g. run_01H8XK3M9PQRSTUVWXYZ01ABCD',
+		placeholder: 'e.g. run_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 		description:
-			'The run to read. Trigger returns it as the run’s ID, and so does every automation event.',
+			"The run to read. 'Trigger' returns its ID, and so does every automation event.",
 		displayOptions: { show: on('getRun', 'getRunEvents') },
 	},
 
@@ -157,10 +158,15 @@ export const automationDescription: INodeProperties[] = [
 			{
 				...connectionLocator({
 					required: false,
-					description: 'Only return automations on this WhatsApp connection',
+					description: 'Only return automations on this WhatsApp number',
 				}),
 				routing: { send: { type: 'query', property: 'connection_id' } },
 			},
 		],
 	},
+
+	// ── getAll, getRun, getRunEvents: Simplify, or the tool's Output ──────────────────────────
+	...outputProperties(on('getAll'), 'automation'),
+	...outputProperties(on('getRun'), 'run'),
+	...outputProperties(on('getRunEvents'), 'runEvent'),
 ];

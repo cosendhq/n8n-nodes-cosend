@@ -9,6 +9,7 @@ import {
 	sendWithIdempotencyKey,
 	unwrapData,
 } from '../shared/descriptions';
+import { outputProperties } from '../shared/output';
 
 const show = { resource: ['message'] };
 const on = (...operations: string[]) => ({ ...show, operation: operations });
@@ -41,7 +42,7 @@ export const messageDescription: INodeProperties[] = [
 			{
 				name: 'Get',
 				value: 'get',
-				action: 'Get a message',
+				action: 'Get message',
 				description: 'Retrieve one message by its Cosend ID or its WhatsApp message ID',
 				routing: { request: { method: 'GET', url: '=/messages/{{ $parameter.messageId }}' } },
 			},
@@ -55,9 +56,8 @@ export const messageDescription: INodeProperties[] = [
 			{
 				name: 'Mark as Read',
 				value: 'markRead',
-				action: 'Mark a message as read',
-				description:
-					'Put blue ticks on the contact’s phone. This is the only operation that reaches WhatsApp’s own read receipt.',
+				action: 'Mark message as read',
+				description: 'Mark a message as read, which shows blue ticks on the contact’s phone',
 				routing: {
 					request: { method: 'POST', url: '=/messages/{{ $parameter.messageId }}/read' },
 					...sendWithIdempotencyKey,
@@ -66,7 +66,7 @@ export const messageDescription: INodeProperties[] = [
 			{
 				name: 'React',
 				value: 'react',
-				action: 'React to a message',
+				action: 'React to message',
 				description: 'Add an emoji reaction to a message, or clear the one already on it',
 				routing: {
 					request: { method: 'POST', url: '=/messages/{{ $parameter.messageId }}/reactions' },
@@ -76,15 +76,15 @@ export const messageDescription: INodeProperties[] = [
 			{
 				name: 'Send',
 				value: 'send',
-				action: 'Send a message',
+				action: 'Send message',
 				description: 'Send one WhatsApp message per input item',
 			},
 			{
 				name: 'Send Batch',
 				value: 'sendBatch',
-				action: 'Send a batch of messages',
+				action: 'Send batch of messages',
 				description:
-					'Send every input item in one request, up to 100 at a time. Each item gets its own result, so one failure does not lose the rest.',
+					'Send many messages in one request, up to 100 at a time. Each message gets its own result.',
 			},
 		],
 		default: 'send',
@@ -97,9 +97,9 @@ export const messageDescription: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		required: true,
-		placeholder: 'e.g. msg_01H8XK3M9PQRSTUVWXYZ01',
+		placeholder: 'e.g. msg_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 		description:
-			'The message to act on. Cosend accepts its own ID or the WhatsApp message ID (wamid) from a webhook.',
+			'The message to act on: its Cosend ID, or the WhatsApp message ID from a webhook',
 		displayOptions: { show: on('get', 'markRead', 'react') },
 	},
 	{
@@ -133,7 +133,7 @@ export const messageDescription: INodeProperties[] = [
 			{
 				name: 'Conversation',
 				value: 'conversation',
-				description: 'An existing thread. Cosend takes the connection and contact from it.',
+				description: 'An existing thread. Cosend takes the WhatsApp number and contact from it.',
 			},
 		],
 	},
@@ -266,7 +266,7 @@ export const messageDescription: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		required: true,
-		placeholder: 'e.g. med_01H8XK3M9PQRSTUVWXYZ01',
+		placeholder: 'e.g. med_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 		description: 'The ID of a file already uploaded to Cosend',
 		displayOptions: {
 			show: { ...forType('image', 'video', 'audio', 'document', 'sticker'), mediaSource: ['id'] },
@@ -408,7 +408,7 @@ export const messageDescription: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				description:
-					'The WhatsApp message ID (wamid) this message quotes. The contact sees it as a reply.',
+					'The WhatsApp message ID this message quotes. The contact sees it as a reply.',
 			},
 			{
 				displayName: 'Send As',
@@ -446,7 +446,7 @@ export const messageDescription: INodeProperties[] = [
 						name: 'Auto',
 						value: 'auto',
 						description:
-							'Send the fallback template instead. The result reports which was used in ‘send_mode_used’.',
+							"Send the fallback template instead. The result reports which was used in 'send_mode_used'.",
 					},
 				],
 			},
@@ -466,7 +466,7 @@ export const messageDescription: INodeProperties[] = [
 			{
 				...connectionLocator({
 					required: false,
-					description: 'Only return messages on this WhatsApp connection',
+					description: 'Only return messages on this WhatsApp number',
 				}),
 				routing: { send: { type: 'query', property: 'connection_id' } },
 			},
@@ -522,4 +522,7 @@ export const messageDescription: INodeProperties[] = [
 			},
 		],
 	},
+
+	// ── get, getAll: Simplify, or the tool's Output ───────────────────────────────────────────
+	...outputProperties(on('get', 'getAll'), 'message'),
 ];

@@ -33,9 +33,9 @@ export const notificationDescription: INodeProperties[] = [
 			{
 				name: 'Send',
 				value: 'send',
-				action: 'Send a notification',
+				action: 'Send notification',
 				description:
-					'Queue one notification. Cosend picks a template or free-form text depending on whether the 24-hour window is open.',
+					'Send one notification. Cosend picks a template or free-form text depending on whether the 24-hour window is open.',
 				routing: {
 					request: { method: 'POST', url: '/notifications' },
 					...sendWithIdempotencyKey,
@@ -60,7 +60,7 @@ export const notificationDescription: INodeProperties[] = [
 		default: '',
 		required: true,
 		placeholder: 'e.g. +919876543210',
-		description: 'Who to notify: a phone number in E.164 format, or a Cosend contact ID',
+		description: 'Who to notify: a phone number with its country code, or a Cosend contact ID',
 		displayOptions: { show: on('send') },
 		routing: { send: { type: 'body', property: 'to' } },
 	},
@@ -81,7 +81,7 @@ export const notificationDescription: INodeProperties[] = [
 			{
 				name: 'Freeform',
 				value: 'freeform',
-				description: 'Always send the free-form body. Fails when the window has closed.',
+				description: 'Always send the free-form text, while the 24-hour window is open',
 			},
 			{ name: 'Template', value: 'template', description: 'Always send the approved template' },
 		],
@@ -120,7 +120,7 @@ export const notificationDescription: INodeProperties[] = [
 		name: 'templateParams',
 		type: 'json',
 		default: '{}',
-		description: 'The template’s variable values, as a JSON object of name/value pairs',
+		description: "The template's variable values, as a JSON object of name/value pairs",
 		displayOptions: { show: { ...on('send'), sendMode: ['auto', 'template'] } },
 		routing: {
 			send: {
@@ -139,7 +139,7 @@ export const notificationDescription: INodeProperties[] = [
 		default: '',
 		required: true,
 		description:
-			'The free-form text to send while the 24-hour window is open. With ‘Send Mode’ set to ‘Freeform’ this is the whole message.',
+			"The free-form text to send while the 24-hour window is open. With 'Send Mode' set to 'Freeform' this is the whole message.",
 		displayOptions: { show: { ...on('send'), sendMode: ['auto', 'freeform'] } },
 		routing: {
 			// A1 §8's column is `body`; the wire name is A2 §5.9's `fallback_body`, and the payload

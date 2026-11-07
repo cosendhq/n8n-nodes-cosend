@@ -1,5 +1,7 @@
 import type { IDataObject } from 'n8n-workflow';
 
+import { recordKindOf, simplifyRecord } from '../Cosend/shared/output';
+
 /** A2 §7.1 — one envelope for every event, every type. */
 export interface CosendEventEnvelope extends IDataObject {
 	id?: string;
@@ -43,5 +45,30 @@ export function simplifyEvent(envelope: CosendEventEnvelope): IDataObject {
 		...(envelope.previous_attributes === undefined
 			? {}
 			: { previous_attributes: envelope.previous_attributes }),
+	};
+}
+
+/**
+ * Simplify from version 1.1, as n8n's UX guidelines ask: at most ten fields, flat, the most used
+ * first. `event`, then the record in the same simplified shape the Cosend node's Simplify gives
+ * it, so a message reads the same from the trigger and from Message: Get. A record with no
+ * simplified shape keeps its ID and its first plain fields, up to ten in all.
+ */
+export function simplifiedEvent(envelope: CosendEventEnvelope): IDataObject {
+	const object = envelope.data?.object;
+	const resource: IDataObject =
+		typeof object === 'object' && object !== null && !Array.isArray(object)
+			? (object as IDataObject)
+			: {};
+	const kind = recordKindOf(resource);
+	if (kind !== undefined) return { event: envelope.type, ...simplifyRecord(kind, resource) };
+
+	const plain = Object.entries(resource).filter(
+		([key, value]) => key !== 'id' && key !== 'object' && (value === null || typeof value !== 'object'),
+	);
+	return {
+		event: envelope.type,
+		id: resource.id ?? null,
+		...Object.fromEntries(plain.slice(0, 8)),
 	};
 }

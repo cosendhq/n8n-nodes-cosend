@@ -33,9 +33,9 @@ export const scheduleDescription: INodeProperties[] = [
 			{
 				name: 'Create',
 				value: 'create',
-				action: 'Create a schedule',
+				action: 'Create schedule',
 				description:
-					'Set up a ladder of reminders around one appointment, for example 24 hours and 2 hours before',
+					'Create a schedule of reminders around one appointment, for example 24 hours and 2 hours before',
 				routing: {
 					request: {
 						method: 'POST',
@@ -65,7 +65,7 @@ export const scheduleDescription: INodeProperties[] = [
 		default: '',
 		required: true,
 		placeholder: 'e.g. +919876543210',
-		description: 'Who to remind: a phone number in E.164 format, or a Cosend contact ID',
+		description: 'Who to remind: a phone number with its country code, or a Cosend contact ID',
 		displayOptions: { show: on('create') },
 		routing: { send: { type: 'body', property: 'to' } },
 	},
@@ -88,7 +88,7 @@ export const scheduleDescription: INodeProperties[] = [
 		required: true,
 		placeholder: 'e.g. 1440,120',
 		description:
-			'Comma-separated minutes before the anchor time to send a reminder. ‘1440,120’ means one a day before and one two hours before. Between 1 and 24 rungs.',
+			"Comma-separated minutes before the appointment to send a reminder. '1440,120' sends one a day before and one two hours before. Between 1 and 24 reminders.",
 		displayOptions: { show: on('create') },
 		routing: {
 			send: {
@@ -118,7 +118,7 @@ export const scheduleDescription: INodeProperties[] = [
 		required: true,
 		placeholder: 'e.g. Asia/Kolkata',
 		description:
-			'An IANA timezone identifier, never a UTC offset. Cosend resolves the reminder times in it and re-resolves them if the timezone database changes.',
+			"The time zone as a place name, for example 'Asia/Kolkata'. Cosend works out the reminder times in it, daylight saving included.",
 		displayOptions: { show: on('create') },
 		routing: { send: { type: 'body', property: 'timezone' } },
 	},
@@ -158,7 +158,7 @@ export const scheduleDescription: INodeProperties[] = [
 				default: '',
 				placeholder: 'e.g. before_anchor_minutes:30',
 				description:
-					'Drop a reminder that has not gone out by this many minutes before the anchor. Written as ‘before_anchor_minutes:’ followed by a number.',
+					"Drop a reminder that has not gone out by this many minutes before the appointment. Written as 'before_anchor_minutes:' followed by a number.",
 				routing: { send: { type: 'body', property: 'expires_policy' } },
 			},
 			idempotencyKeyOption,
@@ -176,7 +176,7 @@ export const scheduleDescription: INodeProperties[] = [
 				name: 'params',
 				type: 'json',
 				default: '{}',
-				description: 'Values for the templates’ variables, as a JSON object of name/value pairs',
+				description: "Values for the templates' variables, as a JSON object of name/value pairs",
 				routing: { send: { type: 'body', property: 'params', value: '={{ JSON.parse($value) }}' } },
 			},
 			{

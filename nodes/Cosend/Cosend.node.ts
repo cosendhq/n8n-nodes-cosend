@@ -43,7 +43,10 @@ export class Cosend implements INodeType {
 		name: 'cosend',
 		icon: { light: 'file:../../icons/cosend.svg', dark: 'file:../../icons/cosend.dark.svg' },
 		group: ['output'],
-		version: 1,
+		// 1.1 adds Simplify, and the tool's Output, to the Get and Get Many operations. A workflow built
+		// on 1 keeps 1, so the raw records it reads do not change under it.
+		version: [1, 1.1],
+		defaultVersion: 1.1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description:
 			'Send WhatsApp messages and manage contacts, conversations, automations and usage in Cosend',

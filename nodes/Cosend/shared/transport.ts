@@ -13,7 +13,7 @@ import type {
 	IWebhookFunctions,
 	JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 
 export type CosendContext =
 	| IExecuteFunctions
@@ -112,19 +112,19 @@ const EXPLANATIONS: Record<string, string> = {
 	template_not_approved:
 		"This template needs Meta's approval before it sends. Check its status in Cosend under Templates, and send free-form text instead while the window is open.",
 	template_not_found:
-		"No template with that name and language exists on this connection. Check 'Template' and 'Language', or sync templates in Cosend under Templates.",
+		"Check 'Template Name' and 'Language', or sync templates in Cosend under Templates. This WhatsApp number has no template with that name and language.",
 	recipient_opted_out:
 		'This contact has opted out of messages from you. WhatsApp does not allow sending to them until they message you again.',
 	connection_not_active:
-		"This WhatsApp connection isn't active. Reconnect it in the Cosend dashboard under Connections, then try again.",
+		"Reconnect this WhatsApp number in the Cosend dashboard under Numbers, then run the workflow again.",
 	connection_not_found:
-		"No connection with that ID exists in this workspace. Pick one from the list in 'Connection'.",
+		"Pick a WhatsApp number from the list in 'WhatsApp Number'. The ID given is not one of this workspace's numbers.",
 	connection_not_routable:
-		'This credential cannot send on that connection. A connection key is scoped to one number. Use a workspace key, or the key that belongs to this connection.',
+		"Use a workspace key, or the connection key of this WhatsApp number. A connection key sends from its own number only.",
 	conversation_locked:
 		'Another team member holds this conversation. Wait for them to release it, or request control from the Cosend inbox.',
 	control_app_is_observed:
-		"Cosend sets 'App' itself when the owner replies from their phone. Choose 'Human' or 'Pending Human'.",
+		"Cosend sets 'On Phone' itself when the owner replies from their phone. Choose 'Human' or 'Passed to a Person'.",
 	media_too_large:
 		"This file is larger than WhatsApp allows for its type. WhatsApp's limits are 5 MB for images, 16 MB for audio and video, 100 MB for documents and 500 KB for stickers.",
 	media_unavailable:
@@ -132,7 +132,7 @@ const EXPLANATIONS: Record<string, string> = {
 	recurring_schedules_not_available:
 		'Use an anchored schedule: one appointment time plus a ladder of reminder offsets.',
 	throughput_exceeded:
-		'This connection is sending at its maximum rate. Cosend paces sends per connection; lower the workflow rate or send in a batch.',
+		'This WhatsApp number is sending at its maximum rate. Cosend paces sends per number; lower the workflow rate or send in a batch.',
 	rate_limited:
 		'Too many requests. Wait for the period given by the Retry-After header and try again.',
 	idempotency_key_required:
@@ -142,7 +142,7 @@ const EXPLANATIONS: Record<string, string> = {
 	insufficient_scope:
 		"This API key doesn't carry the scope this operation needs. Create a key with it in Cosend under Settings → API Keys.",
 	recipient_invalid:
-		"Cosend could not read that recipient. Use E.164 with the country code, for example '+919876543210', or a ct_… contact ID.",
+		"Use a phone number with + and the country code, for example '+919876543210', or a contact ID starting with 'ct_'.",
 };
 
 /** The friendlier text for a Cosend error code, or `undefined` when we have nothing better to say. */
@@ -163,8 +163,10 @@ export function cosendApiError(
 	failure: CosendFailure,
 	options: { fallbackMessage: string; httpCode?: string; itemIndex?: number },
 ): NodeApiError {
+	// n8n's UX guidelines: a message about one item ends with `[item X]`.
+	const item = options.itemIndex === undefined ? '' : ` [item ${options.itemIndex}]`;
 	const error = new NodeApiError(node, errorResponse, {
-		message: failure.message ?? options.fallbackMessage,
+		message: `${failure.message ?? options.fallbackMessage}${item}`,
 		...(options.httpCode === undefined ? {} : { httpCode: options.httpCode }),
 		...(options.itemIndex === undefined ? {} : { itemIndex: options.itemIndex }),
 	});
@@ -172,7 +174,7 @@ export function cosendApiError(
 	// constructor returns it unchanged and ignores `message`, so n8n's generic one would stay. With
 	// no Cosend message to put there (a refused connection, a proxy's page), n8n's own is kept.
 	if (errorResponse instanceof NodeApiError && failure.message !== undefined) {
-		error.message = failure.message;
+		error.message = `${failure.message}${item}`;
 		// n8n made the description from that same body, and drops it as a repeat only when it builds
 		// the error itself.
 		if (error.description === failure.message) error.description = undefined;
@@ -213,6 +215,37 @@ export function failureJsonOf(error: unknown): IDataObject {
 }
 
 /**
+ * A thrown error about one item, its message ending `[item X]` as n8n's UX guidelines ask. An
+ * error that is not yet n8n's own is wrapped so the item index travels with it.
+ */
+export function withItem(node: INode, error: unknown, itemIndex: number): NodeApiError | NodeOperationError {
+	const nodeError =
+		error instanceof NodeApiError || error instanceof NodeOperationError
+			? error
+			: new NodeApiError(node, error as JsonObject, { itemIndex });
+	const suffix = ` [item ${itemIndex}]`;
+	if (!nodeError.message.endsWith(suffix)) nodeError.message = `${nodeError.message}${suffix}`;
+	return nodeError;
+}
+
+/**
+ * The output item for a failure under "On Error → Continue".
+ *
+ * **Under "Continue (using error output)" the code, request ID and hint move into `details`.**
+ * n8n sends an item to the error output when the item carries `error`, or when its JSON holds
+ * nothing but `error`, `message` and `details` (n8n-core's `handleNodeErrorOutput`). The first is
+ * no use here: n8n 2.46 then replaces the item's JSON with `{ error: message }`
+ * (`normalizeNodeErrors`), and the code and request ID are gone. So the JSON takes the second
+ * shape, and n8n adds the input item's own fields to it. Under plain "Continue" the JSON stays
+ * flat, as it always was.
+ */
+export function failureItem(node: INode, json: IDataObject, itemIndex?: number): INodeExecutionData {
+	const { error, ...details } = json;
+	const shaped = node.onError === 'continueErrorOutput' ? { error, details } : json;
+	return itemIndex === undefined ? { json: shaped } : { json: shaped, pairedItem: { item: itemIndex } };
+}
+
+/**
  * A declarative operation's answer, checked before anything else reads it.
  *
  * The node's `requestDefaults` set `ignoreHttpStatusErrors`, so a refusal reaches this function as
@@ -239,7 +272,7 @@ export async function surfaceCosendError(
 	});
 
 	if (this.continueOnFail()) {
-		return [{ json: failureJson(failure.message ?? fallbackMessage, failure) }];
+		return [failureItem(this.getNode(), failureJson(failure.message ?? fallbackMessage, failure))];
 	}
 	throw cosendApiError(this.getNode(), (response.body ?? {}) as JsonObject, failure, {
 		fallbackMessage,
@@ -288,7 +321,7 @@ export async function cosendApiRequest<T = IDataObject>(
 			this.getNode(),
 			httpErrorOf(error) as JsonObject,
 			cosendFailureOf(responseBodyOf(error)),
-			{ fallbackMessage: `Cosend API request failed: ${method} ${endpoint}` },
+			{ fallbackMessage: 'Cosend could not complete the request' },
 		);
 	}
 }
