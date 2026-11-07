@@ -62,7 +62,8 @@ describe('a declarative operation Cosend refused', () => {
 			.call(asSingle(context), [{ json: REFUSAL }], response(409, REFUSAL))
 			.catch((error: unknown) => error)) as NodeApiError;
 
-		expect(failure.message).toBe('The 24-hour window is closed.');
+		// n8n's UX guidelines: an error message names the item it came from.
+		expect(failure.message).toBe('The 24-hour window is closed. [item 2]');
 		expect(failure.description).toMatch(/approved template/);
 		expect(failure.httpCode).toBe('409');
 		expect(failure.context).toMatchObject({
@@ -96,6 +97,41 @@ describe('a declarative operation Cosend refused', () => {
 				},
 			},
 		]);
+	});
+
+	/**
+	 * Catches: "Continue (using error output)" sending a refusal down the success output.
+	 *
+	 * n8n-core's `handleNodeErrorOutput` moves an item to the error output when its JSON holds
+	 * nothing but `error`, `message` and `details`. The flat item above has `code` and `request_id`
+	 * too, so it stayed on the success output.
+	 */
+	it('shapes the error item for the error output under Continue (using error output)', async () => {
+		const context = {
+			...createExecuteContext({ items: [{}], continueOnFail: true }),
+			getNode: () => ({ ...NODE, onError: 'continueErrorOutput' as const }),
+		};
+
+		const items = await surfaceCosendError.call(
+			asSingle(context),
+			[{ json: REFUSAL }],
+			response(409, REFUSAL),
+		);
+
+		expect(items).toEqual([
+			{
+				json: {
+					error: 'The 24-hour window is closed.',
+					details: {
+						code: 'service_window_closed',
+						request_id: 'req_01K3F8XK3M9PQRSTVWXYZ01ABC',
+						hint: expect.stringMatching(/approved template/),
+					},
+				},
+			},
+		]);
+		const keys = Object.keys(items[0]?.json ?? {});
+		expect(keys.every((key) => ['error', 'message', 'details'].includes(key))).toBe(true);
 	});
 
 	/**

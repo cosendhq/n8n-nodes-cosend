@@ -155,7 +155,7 @@ export const contactLocator = (description: string): INodeProperties => ({
 					type: 'regex',
 					properties: {
 						regex: '^\\+[1-9]\\d{6,14}$',
-						errorMessage: "Enter the number in E.164 format, for example '+919876543210'",
+						errorMessage: "Enter the number with + and the country code, for example '+919876543210'",
 					},
 				},
 			],
@@ -164,7 +164,7 @@ export const contactLocator = (description: string): INodeProperties => ({
 			displayName: 'ID',
 			name: 'id',
 			type: 'string',
-			placeholder: 'e.g. ct_01H8XK3M9PQRSTUVWXYZ01',
+			placeholder: 'e.g. ct_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 			validation: [
 				{
 					type: 'regex',
@@ -197,7 +197,7 @@ export const conversationLocator = (description: string): INodeProperties => ({
 			displayName: 'ID',
 			name: 'id',
 			type: 'string',
-			placeholder: 'e.g. cnv_01H8XK3M9PQRSTUVWXYZ01',
+			placeholder: 'e.g. cnv_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 			validation: [
 				{
 					type: 'regex',
@@ -212,7 +212,8 @@ export const conversationLocator = (description: string): INodeProperties => ({
 });
 
 /**
- * The WhatsApp connection to act on.
+ * The WhatsApp number to act on, named as the dashboard names it ("Numbers"); the API calls it a
+ * connection, which is why the parameter is `connectionId`.
  *
  * Optional wherever the API allows it, because a **connection key** already names one — A2 §5.4:
  * "Optional with a connection key". Required only where the request schema makes it required:
@@ -223,7 +224,7 @@ export const connectionLocator = (options: {
 	required: boolean;
 	description: string;
 }): INodeProperties => ({
-	displayName: 'Connection',
+	displayName: 'WhatsApp Number',
 	name: 'connectionId',
 	type: 'resourceLocator',
 	default: { mode: 'list', value: '' },
@@ -240,13 +241,13 @@ export const connectionLocator = (options: {
 			displayName: 'ID',
 			name: 'id',
 			type: 'string',
-			placeholder: 'e.g. conn_01H8XK3M9PQRSTUVWXYZ01',
+			placeholder: 'e.g. conn_01J9Z3K8M2Q4R6T8V0W2X4Y6Z8',
 			validation: [
 				{
 					type: 'regex',
 					properties: {
 						regex: '^conn_[0-9A-HJKMNP-TV-Z]{26}$',
-						errorMessage: "A connection ID looks like 'conn_' followed by 26 characters",
+						errorMessage: "A WhatsApp number ID looks like 'conn_' followed by 26 characters",
 					},
 				},
 			],

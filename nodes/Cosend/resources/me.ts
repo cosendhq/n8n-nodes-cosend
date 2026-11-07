@@ -23,8 +23,8 @@ export const meDescription: INodeProperties[] = [
 			{
 				name: 'Get',
 				value: 'get',
-				action: 'Get the current workspace',
-				description: 'Return the calling credential, its workspace, plan and limits',
+				action: 'Get current workspace',
+				description: 'Retrieve the current workspace, with this credential, its plan and limits',
 				routing: { request: { method: 'GET', url: '/me' } },
 			},
 		],

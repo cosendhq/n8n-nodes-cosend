@@ -263,7 +263,7 @@ describe('Cosend error explanations', () => {
 	 */
 	it('explains the codes the API actually sends, and no invented ones', () => {
 		expect(explainCosendError('service_window_closed')).toMatch(/24 hours/);
-		expect(explainCosendError('connection_not_active')).toMatch(/Connections/);
+		expect(explainCosendError('connection_not_active')).toMatch(/Numbers/);
 		expect(explainCosendError('recurring_schedules_not_available')).toMatch(/anchored/i);
 
 		// The two Doc 03 invented. If either ever gains an explanation, the code behind it should

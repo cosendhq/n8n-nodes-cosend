@@ -5,8 +5,10 @@ import {
 	cosendApiError,
 	cosendApiRequest,
 	cosendFailureOf,
+	failureItem,
 	failureJson,
 	failureJsonOf,
+	withItem,
 } from '../shared/transport';
 import { buildMessageBody, idempotencyKeyFor } from './messageBody';
 
@@ -54,12 +56,11 @@ export async function sendBatch(this: IExecuteFunctions): Promise<INodeExecution
 		} catch (error) {
 			if (!this.continueOnFail()) {
 				// Already a NodeOperationError from `buildMessageBody`, or a NodeApiError from the
-				// media upload inside it. Named rather than re-thrown so the intent is legible.
-				const failure = error;
-				throw failure;
+				// media upload inside it, now naming its item.
+				throw withItem(this.getNode(), error, i);
 			}
 			bodies.push(undefined);
-			results[i] = { json: failureJsonOf(error), pairedItem: { item: i } };
+			results[i] = failureItem(this.getNode(), failureJsonOf(error), i);
 		}
 	}
 
@@ -108,10 +109,8 @@ export async function sendBatch(this: IExecuteFunctions): Promise<INodeExecution
 			// A row's error is A2 §3.4's `error` member on its own, so it is read as one.
 			const failure = cosendFailureOf({ error: result.error });
 			if (this.continueOnFail()) {
-				results[entry.itemIndex] = {
-					json: failureJson(result.error.message, failure),
-					pairedItem: { item: entry.itemIndex },
-				};
+				const json = failureJson(result.error.message, failure);
+				results[entry.itemIndex] = failureItem(this.getNode(), json, entry.itemIndex);
 				continue;
 			}
 
@@ -127,10 +126,8 @@ export async function sendBatch(this: IExecuteFunctions): Promise<INodeExecution
 	// missing answer as a successful one.
 	for (let i = 0; i < results.length; i++) {
 		if (results[i] === undefined) {
-			results[i] = {
-				json: { error: 'Cosend returned no result for this item' },
-				pairedItem: { item: i },
-			};
+			const json = { error: 'Cosend returned no result for this item' };
+			results[i] = failureItem(this.getNode(), json, i);
 		}
 	}
 

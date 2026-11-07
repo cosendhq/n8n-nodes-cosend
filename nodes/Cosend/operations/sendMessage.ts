@@ -1,8 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { IExecuteFunctions, INodeExecutionData, JsonObject } from 'n8n-workflow';
-import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 
-import { cosendApiRequest, failureJsonOf } from '../shared/transport';
+import { cosendApiRequest, failureItem, failureJsonOf, withItem } from '../shared/transport';
 import { buildMessageBody, idempotencyKeyFor } from './messageBody';
 
 /** The endpoint this operation posts to. Exported so `test/contract.test.ts` can check it
@@ -41,17 +40,13 @@ export async function sendMessage(this: IExecuteFunctions): Promise<INodeExecuti
 			results.push({ json: sent as JsonObject, pairedItem: { item: i } });
 		} catch (error) {
 			if (this.continueOnFail()) {
-				results.push({ json: failureJsonOf(error), pairedItem: { item: i } });
+				results.push(failureItem(this.getNode(), failureJsonOf(error), i));
 				continue;
 			}
 			// Wrapped only if it is not already one of n8n's error classes: `cosendApiRequest`
 			// raises `NodeApiError` and `buildMessageBody` raises `NodeOperationError`, and
 			// wrapping either again would bury the message that names the actual problem.
-			const failure =
-				error instanceof NodeApiError || error instanceof NodeOperationError
-					? error
-					: new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
-			throw failure;
+			throw withItem(this.getNode(), error, i);
 		}
 	}
 
