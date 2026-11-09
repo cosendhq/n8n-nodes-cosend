@@ -3,50 +3,34 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## WhatsApp AI agent\n\nAn AI agent answers every WhatsApp message your number receives, in the same conversation. It remembers the chat, and when a customer needs a person it passes the conversation to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** in Settings > Community nodes, following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/). On n8n 1.x, also set the environment variable **N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true** so the agent can use the Cosend tool.\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Open **OpenAI Chat Model** and add your OpenAI credential, or swap in any chat model you like.\n4. Open **AI Agent** and write about your business in the system message: what you sell, your hours, your tone.\n5. Turn the workflow on and send a message to your business number.\n\nTested on n8n 2.46.6 with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
-        "height": 500,
-        "width": 440,
-        "color": 4
+        "content": "## WhatsApp AI agent that hands over to your team\n\n### How it works\n1. **When a WhatsApp message arrives** starts the workflow for each text message your business number receives in Cosend.\n2. **Who is answering** reads the chat, and **No person has taken over** lets the message through only while the bot is in charge, so the agent never talks over your team.\n3. The **AI Agent** answers in the same conversation and keeps a memory for each chat.\n4. When a customer asks for a person, the agent calls **Pass to my team**: the conversation waits in your Cosend inbox, and the agent tells the customer that someone will reply.\n\n### Setup\n1. On self-hosted n8n, install the community node **n8n-nodes-cosend** (Settings > Community nodes), following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/). On n8n 1.x, also set **N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true** so the agent can use the Cosend tool.\n2. Add a **Cosend API** credential with an API key from the Cosend dashboard (Settings > Developer > API keys) and pick it on the four Cosend nodes. Your WhatsApp number must be connected to Cosend.\n3. Add your credential to **OpenAI Chat Model**, or swap in any chat model.\n4. Describe your business in the **AI Agent** system message: what you sell, your hours, your tone.\n5. Turn the workflow on. Cosend must be able to reach your n8n over the internet. Then message your business number.\n\n### Customization\nEdit the description of **Pass to my team** to change when the agent hands a chat over.\n\nTested with n8n-nodes-cosend 2026.11.0 on self-hosted n8n 2.46.6.",
+        "height": 700,
+        "width": 560,
+        "color": 1
       },
       "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e01",
       "name": "About this workflow",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -560,
-        -220
+        -760,
+        -200
       ]
     },
     {
       "parameters": {
-        "content": "### Passing to a person\n**Pass to my team** is the Cosend node, working as a tool for the agent. The agent calls it when a customer asks for a person, and the conversation waits in your Cosend inbox for your team. Edit its description to change when the agent uses it.",
-        "height": 190,
-        "width": 340,
+        "content": "## Answer with AI\nEach conversation keeps its own memory. **Pass to my team** is the Cosend node working as a tool: the agent calls it when a customer needs a person. **Reply on WhatsApp** sends the agent's answer into the chat.",
+        "height": 600,
+        "width": 720,
         "color": 7
       },
       "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e02",
-      "name": "Tool use",
+      "name": "Answer with AI",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        980,
-        400
-      ]
-    },
-    {
-      "parameters": {
-        "content": "### Memory\nEach WhatsApp conversation keeps its own memory, so the agent follows the chat and two customers never share one.",
-        "height": 160,
-        "width": 280,
-        "color": 7
-      },
-      "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d6e03",
-      "name": "Memory note",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        620,
-        400
+        660,
+        -200
       ]
     },
     {
@@ -83,7 +67,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2,
       "position": [
-        700,
+        760,
         0
       ]
     },
@@ -102,7 +86,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        560,
+        720,
         220
       ]
     },
@@ -117,7 +101,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        720,
+        860,
         220
       ]
     },
@@ -142,7 +126,7 @@
       "type": "n8n-nodes-cosend.cosendTool",
       "typeVersion": 1,
       "position": [
-        880,
+        1000,
         220
       ]
     },
@@ -165,7 +149,7 @@
       "type": "n8n-nodes-cosend.cosend",
       "typeVersion": 1,
       "position": [
-        1080,
+        1200,
         0
       ]
     },
@@ -223,18 +207,18 @@
     },
     {
       "parameters": {
-        "content": "### Your team comes first\nThe workflow answers only while no person has taken over the chat. When it passes a chat to your team, when someone picks a chat up in the Cosend inbox, or when you reply from the WhatsApp Business app, the workflow stays quiet for that chat.",
-        "height": 200,
-        "width": 340,
+        "content": "## New message, if no person has taken over\nThe workflow answers only while the bot is in charge. Once it passes a chat to your team, someone picks it up in the Cosend inbox, or you reply from the WhatsApp Business app, it stays quiet.",
+        "height": 600,
+        "width": 700,
         "color": 7
       },
       "id": "c4d8e2f1-6a7b-4c8d-9e0f-2a3b4c5d60c4",
-      "name": "Your team comes first",
+      "name": "New message, if no person has taken over",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        60,
-        200
+        -80,
+        -200
       ]
     }
   ],

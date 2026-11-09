@@ -3,66 +3,66 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Google Sheets to WhatsApp\n\nEvery 5 minutes, each row of your sheet with a phone number and no status gets an approved WhatsApp template. The workflow then writes **sent** and the time into that row, or **failed** and the reason, so every row is sent once and you can see what happened.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** in Settings > Community nodes, following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).\n2. Make a sheet with a header row of **phone** and **name**, one customer per row. The workflow adds the **status**, **sent_at** and **error** columns the first time it writes.\n3. Open **Read the sheet**, connect your Google account and pick your sheet from the list. Open **Write the status** and pick the same Google account; it writes to the sheet you picked.\n4. Open **Send WhatsApp template**, add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys).\n5. Pick your approved template and its language. With a workspace key, also pick the WhatsApp number that sends in **Connection**; a connection key already names one.\n6. Turn the workflow on.\n\nTo send a row again, clear its **status**.\n\nTested on n8n 2.46.6 with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
-        "height": 600,
-        "width": 460,
-        "color": 4
+        "content": "## Send a WhatsApp template to each new Google Sheets row\n\n### How it works\n1. Every 5 minutes, **Read the sheet** reads your Google Sheet. **Rows not sent yet** keeps each row with a phone number and no status, and **At most 50 a run** caps the batch.\n2. **Send WhatsApp template** sends your approved template through Cosend, with the row's name in the message.\n3. **Write the status** writes **sent** and the time into that row, or **failed** and Cosend's reason, so every row is sent once and you can see what happened.\n\n### Setup\n1. On self-hosted n8n, install the community node **n8n-nodes-cosend** (Settings > Community nodes), following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).\n2. Make a sheet with a header row of **phone** and **name**. The workflow adds **status**, **sent_at** and **error** the first time it writes.\n3. In **Read the sheet**, connect Google and pick your sheet. Pick the same Google account in **Write the status**.\n4. In **Send WhatsApp template**, add a **Cosend API** credential with an API key from the Cosend dashboard (Settings > Developer > API keys), then pick your template and its language. With a workspace key, also pick the sending number in **Connection**.\n5. Turn the workflow on.\n\n### Customization\nChange how often it runs in **Every 5 minutes**, and how many rows a run sends in **At most 50 a run** (rename it to match). To send a row again, clear its **status**.\n\nTested with n8n-nodes-cosend 2026.11.0 on self-hosted n8n 2.46.6.",
+        "height": 620,
+        "width": 560,
+        "color": 1
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a01",
       "name": "About this workflow",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -540,
-        -240
+        -760,
+        -280
       ]
     },
     {
       "parameters": {
-        "content": "### The phone column\nWrite each number with its country code, for example **+44 7700 900123**. The workflow keeps the digits and adds the **+**, so spaces and dashes are fine.",
-        "height": 170,
-        "width": 300,
+        "content": "## Read the rows to send\nWrite each number with its country code, for example **+44 7700 900123**; spaces and dashes are fine. A row with any status is skipped, and each run takes at most 50 rows.",
+        "height": 560,
+        "width": 860,
         "color": 7
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a02",
-      "name": "Phone numbers",
+      "name": "Read the rows to send",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        180,
-        200
+        -80,
+        -280
       ]
     },
     {
       "parameters": {
-        "content": "### The template\nWhatsApp lets a business start a conversation with a template Meta approved. Create one in the Cosend dashboard under **Templates**, with one variable for the first name, for example:\n\n*Hi {{1}}, thanks for signing up. Reply here any time.*\n\n**Components** fills that variable from the **name** column. A template with no variables takes **[]**.",
-        "height": 260,
+        "content": "## Send the template\nCreate a template with one variable for the first name in the Cosend dashboard under **Templates**, for example *Hi {{1}}, thanks for signing up.* **Components** fills it from **name**. A template with no variables takes **[]**.",
+        "height": 560,
         "width": 340,
         "color": 7
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a03",
-      "name": "Template",
+      "name": "Send the template",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        520,
-        200
+        800,
+        -280
       ]
     },
     {
       "parameters": {
-        "content": "### The status column\nA row with any status is skipped, so each customer gets the message once.\n\n- **sent**: the message went out at the time in **sent_at**.\n- **failed**: Cosend's reason is in **error**. Fix the row, clear its status, and the next run sends it.\n\nEach run sends to at most 50 rows; the rest go in the next run.",
-        "height": 260,
-        "width": 360,
+        "content": "## Write the result\n**sent** means the message went out at the time in **sent_at**. **failed** puts Cosend's reason in **error**: fix the row, clear its status, and the next run sends it.",
+        "height": 560,
+        "width": 600,
         "color": 7
       },
       "id": "3f1c2b7a-5d1e-4c2a-9a51-0b7e3c1d2a06",
-      "name": "Status column",
+      "name": "Write the result",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1460,
-        240
+        1160,
+        -280
       ]
     },
     {
@@ -227,7 +227,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1100,
+        1180,
         0
       ]
     },
@@ -270,7 +270,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1320,
+        1400,
         -100
       ]
     },
@@ -313,7 +313,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1320,
+        1400,
         100
       ]
     },
@@ -347,7 +347,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1540,
+        1620,
         0
       ]
     }

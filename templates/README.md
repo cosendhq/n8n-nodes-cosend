@@ -23,6 +23,8 @@ Every template needs:
 - **A WhatsApp number connected to Cosend.**
 
 Each template is tested with n8n-nodes-cosend 2026.11.0 (community node) on self-hosted n8n 2.46.6.
+A picture of each workflow is in [`images/`](./images/), for when n8n's preview of a community node
+does not render.
 
 ## How to import
 
@@ -41,6 +43,8 @@ Pick whichever suits you:
 Then open each node with a warning, pick your credential, and turn the workflow on.
 
 ## Google Sheets to WhatsApp
+
+![The Google Sheets to WhatsApp workflow in n8n](./images/google-sheets-to-whatsapp.png)
 
 **What it does.** Every 5 minutes, each row of a Google Sheet with a phone number and no status
 gets an approved WhatsApp template, with the row's name filled into the message. The workflow then
@@ -67,6 +71,8 @@ already names the WhatsApp number that sends; with a workspace key, pick that nu
 
 ## Receive WhatsApp messages
 
+![The Receive WhatsApp messages workflow in n8n](./images/receive-whatsapp-messages.png)
+
 **What it does.** The Cosend Trigger starts the workflow for each text message your number
 receives. A Switch node routes it by keyword: **price** gets your prices, **hours** gets your
 opening hours, and every other message goes to your team in the Cosend inbox. The workflow answers
@@ -83,6 +89,8 @@ pick your Cosend credential on each Cosend node, and edit the keywords and reply
 your business. Add a rule to **Route by keyword** for each new keyword.
 
 ## WhatsApp AI agent
+
+![The WhatsApp AI agent workflow in n8n](./images/whatsapp-ai-agent.png)
 
 **What it does.** n8n's AI Agent answers each WhatsApp message in the same conversation. It keeps
 a memory per conversation, and it has the Cosend node as a tool: when a customer asks for a
