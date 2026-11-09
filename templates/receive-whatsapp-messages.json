@@ -3,50 +3,50 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Receive WhatsApp messages\n\nEach WhatsApp message your number receives starts this workflow. A keyword picks the reply, and anything else goes to your team in the Cosend inbox.\n\n### Set it up\n1. Install the community node **n8n-nodes-cosend** in Settings > Community nodes, following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).\n2. Open **When a WhatsApp message arrives** and add a **Cosend API** credential with your API key (Cosend dashboard > Settings > Developer > API keys). Pick the same credential on the other Cosend nodes.\n3. Edit the keywords in **Route by keyword** and the text in each reply.\n4. Turn the workflow on. Cosend connects to it by itself, so there is no URL to copy.\n\nSend **price** or **hours** to your business number to see it answer.\n\nTested on n8n 2.46.6 with n8n-nodes-cosend 2026.11.0 (community node; self-hosted n8n)",
-        "height": 480,
-        "width": 420,
-        "color": 4
+        "content": "## Reply to WhatsApp messages by keyword\n\n### How it works\n1. **When a WhatsApp message arrives** starts the workflow for each text message your business number receives in Cosend.\n2. **Who is answering** reads the chat, and **No person has taken over** lets the message through only while the bot is in charge.\n3. **Route by keyword** checks the text: **price** gets your prices and **hours** gets your opening hours.\n4. Any other message goes to **Pass to my team**, which puts the conversation in your Cosend inbox for a person to answer.\n\n### Setup\n1. On self-hosted n8n, install the community node **n8n-nodes-cosend** (Settings > Community nodes), following n8n's [community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).\n2. Add a **Cosend API** credential with an API key from the Cosend dashboard (Settings > Developer > API keys) and pick it on every Cosend node. Your WhatsApp number must be connected to Cosend.\n3. Turn the workflow on. Cosend registers its webhook by itself, so there is no URL to copy, but it must be able to reach your n8n over the internet.\n4. Send **price** or **hours** to your business number to try it.\n\n### Customization\nEdit the keywords in **Route by keyword** and the text of each reply. Add a rule and a reply for each new keyword.\n\nTested with n8n-nodes-cosend 2026.11.0 on self-hosted n8n 2.46.6.",
+        "height": 580,
+        "width": 560,
+        "color": 1
       },
       "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a01",
       "name": "About this workflow",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -520,
-        -220
+        -760,
+        -360
       ]
     },
     {
       "parameters": {
-        "content": "### Keywords\nEach rule checks the message text, in any letter case. Add a rule for each keyword you want, and give its output a name.\n\nThe last output, **Anything else**, catches every other message.",
-        "height": 190,
-        "width": 320,
+        "content": "## Pick the reply by keyword\nEach rule checks the message text in any letter case. Add a rule for each keyword and name its output. **Anything else** catches every other message.",
+        "height": 760,
+        "width": 300,
         "color": 7
       },
       "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a02",
-      "name": "Keywords",
+      "name": "Pick the reply by keyword",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        620,
-        -320
+        660,
+        -360
       ]
     },
     {
       "parameters": {
-        "content": "### Replies\nEach reply goes into the same conversation, inside WhatsApp's 24-hour window, so any text works here.\n\n**Pass to my team** puts the conversation in your Cosend inbox for a person to answer.",
-        "height": 170,
+        "content": "## Reply or pass to your team\nEach reply goes into the same conversation, inside WhatsApp's 24-hour window, so any text works. **Pass to my team** puts the conversation in your Cosend inbox for a person.",
+        "height": 760,
         "width": 320,
         "color": 7
       },
       "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f5a03",
-      "name": "Replies",
+      "name": "Reply or pass to your team",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1000,
-        380
+        980,
+        -360
       ]
     },
     {
@@ -263,18 +263,18 @@
     },
     {
       "parameters": {
-        "content": "### Your team comes first\nThe workflow answers only while no person has taken over the chat. When it passes a chat to your team, when someone picks a chat up in the Cosend inbox, or when you reply from the WhatsApp Business app, the workflow stays quiet for that chat.",
-        "height": 200,
-        "width": 340,
+        "content": "## New message, if no person has taken over\nThe workflow answers only while the bot is in charge. Once it passes a chat to your team, someone picks it up in the Cosend inbox, or you reply from the WhatsApp Business app, it stays quiet.",
+        "height": 760,
+        "width": 700,
         "color": 7
       },
       "id": "7a2e4d10-1b3c-4e5f-8a6b-1c2d3e4f50c4",
-      "name": "Your team comes first",
+      "name": "New message, if no person has taken over",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        120,
-        200
+        -80,
+        -360
       ]
     }
   ],
