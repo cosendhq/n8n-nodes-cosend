@@ -1,0 +1,232 @@
+{
+  "name": "Alert Slack one hour before a WhatsApp 24-hour window closes",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Alert Slack one hour before a WhatsApp 24-hour window closes\n\n### How it works\nCosend fires Conversation Window Expiring (conversation.window_expiring) one hour before Meta's 24-hour customer service window closes on a WhatsApp chat. The Cosend Trigger starts this workflow with the customer attached, an IF node keeps chats still open and unassigned, and the Slack node posts the customer's name, number and a link to the chat in the Cosend inbox. The Cosend node adds a note so the team sees the alert went out, and someone replies from the inbox or the phone while a plain reply still goes through.\n\n### Setup\nSelf-hosted n8n with the n8n-nodes-cosend community node (version tested 2026.11.1; install guide at cosend.app/docs/n8n). A Cosend account on any plan, including Free, with a connection API key in the Cosend API credential. A Slack credential. Fill in Set your values with the channel and inbox URL, then activate.\n\n### Customization\nPost to a person instead of a channel, add a 15-minute alert with a Wait node, or alert on one label only.",
+        "height": 560,
+        "width": 560,
+        "color": 1
+      },
+      "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4f01",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Alert the team in Slack\nA reply from the Cosend inbox or from the WhatsApp Business app on the phone keeps the conversation free-form. After the window, an approved template reaches the customer.",
+        "height": 560,
+        "width": 720,
+        "color": 7
+      },
+      "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4f02",
+      "name": "Alert the team in Slack",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "events": [
+          "conversation.window_expiring"
+        ],
+        "options": {
+          "includeContact": true,
+          "simplify": true
+        }
+      },
+      "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4f03",
+      "name": "Window closes in one hour",
+      "type": "n8n-nodes-cosend.cosendTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4fa1",
+              "name": "slack_channel",
+              "value": "#whatsapp",
+              "type": "string"
+            },
+            {
+              "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4fa2",
+              "name": "inbox_url",
+              "value": "https://dashboard.cosend.app/inbox/",
+              "type": "string"
+            },
+            {
+              "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4fa3",
+              "name": "only_unassigned",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4f04",
+      "name": "Set your values",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4fb1",
+              "leftValue": "={{ $json.state }}",
+              "rightValue": "open",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4fb2",
+              "leftValue": "={{ !$json.assignee_id || $json.only_unassigned === false }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4f05",
+      "name": "Still waiting for a reply?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $('Set your values').item.json.slack_channel }}",
+          "mode": "name"
+        },
+        "text": "=WhatsApp window closes in 1 hour for {{ $('Set your values').item.json.contact?.display_name }} ({{ $('Set your values').item.json.contact?.phone_e164 }}). Open the chat: {{ $('Set your values').item.json.inbox_url }}{{ $('Set your values').item.json.id }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4f06",
+      "name": "Post the alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "operation": "addNote",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $('Set your values').item.json.id }}",
+          "mode": "id"
+        },
+        "noteBody": "=Slack alert posted to {{ $('Set your values').item.json.slack_channel }} at {{ $now.toFormat('yyyy-MM-dd HH:mm ZZZZ') }}."
+      },
+      "id": "e3a9d6b2-8c41-4f7e-a250-6b1c2d3e4f07",
+      "name": "Record the alert",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -20
+      ]
+    }
+  ],
+  "connections": {
+    "Window closes in one hour": {
+      "main": [
+        [
+          {
+            "node": "Set your values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your values": {
+      "main": [
+        [
+          {
+            "node": "Still waiting for a reply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still waiting for a reply?": {
+      "main": [
+        [
+          {
+            "node": "Post the alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Post the alert": {
+      "main": [
+        [
+          {
+            "node": "Record the alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
