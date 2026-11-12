@@ -1,0 +1,335 @@
+{
+  "name": "Log WhatsApp replies sent from the phone to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Log WhatsApp replies sent from the phone to Google Sheets\n\n### How it works\nWhen the owner answers a customer from the WhatsApp Business app on their phone, Cosend emits Message Echo (message.echo) and the Cosend Trigger starts this workflow. It shapes the reply into one row (phone, name, first 200 characters, time, conversation ID) and appends or updates a Google Sheets row matched on phone. The Cosend node then adds an internal note to the conversation, so the team sees the sheet is current. Use the sheet as the stop condition in your follow-up sequences.\n\n### Setup\nA Cosend number connected with Keep WhatsApp on my phone (coexistence), where Message Echo comes from. Self-hosted n8n with the n8n-nodes-cosend community node (version tested 2026.11.1; install guide at cosend.app/docs/n8n). A connection API key in the Cosend API credential, any plan including Free. A Google Sheets credential. Fill in Set your values.\n\n### Customization\nSend the row to HubSpot or Pipedrive, add a Slack message, or keep one label with the Labels filter.",
+        "height": 560,
+        "width": 560,
+        "color": 1
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b01",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## For coexistence numbers\nMessage Echo fires when the owner replies from the WhatsApp Business app on a number connected with **Keep WhatsApp on my phone** (coexistence).",
+        "height": 560,
+        "width": 300,
+        "color": 3
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b02",
+      "name": "For coexistence numbers",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Shape the row\nOne line per reply, matched on phone. In **Set your values**, **sheet_id** is the long ID in your sheet's URL.",
+        "height": 560,
+        "width": 460,
+        "color": 7
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b03",
+      "name": "Shape the row (section)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Write and record\nThe sheet is the stop condition for your follow-ups. Give its tab a header row of **phone**, **name**, **last_reply_text**, **last_reply_at** and **conversation_id**.",
+        "height": 560,
+        "width": 460,
+        "color": 7
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b04",
+      "name": "Write and record",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "events": [
+          "message.echo"
+        ],
+        "options": {
+          "includeContact": true,
+          "simplify": true
+        }
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b05",
+      "name": "Owner replied from the phone",
+      "type": "n8n-nodes-cosend.cosendTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8ba1",
+              "name": "sheet_id",
+              "value": "YOUR_GOOGLE_SHEET_ID",
+              "type": "string"
+            },
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8ba2",
+              "name": "sheet_name",
+              "value": "Replies",
+              "type": "string"
+            },
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8ba3",
+              "name": "max_text_length",
+              "value": 200,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b06",
+      "name": "Set your values",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8bb1",
+              "name": "phone",
+              "value": "={{ $json.contact?.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8bb2",
+              "name": "name",
+              "value": "={{ $json.contact?.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8bb3",
+              "name": "reply_text",
+              "value": "={{ String($json.content?.body ?? $json.content?.caption ?? '[' + $json.type + ']').slice(0, $json.max_text_length) }}",
+              "type": "string"
+            },
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8bb4",
+              "name": "replied_at",
+              "value": "={{ $json.created_at }}",
+              "type": "string"
+            },
+            {
+              "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8bb5",
+              "name": "conversation_id",
+              "value": "={{ $json.conversation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b07",
+      "name": "Shape the row",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Set your values').item.json.sheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Set your values').item.json.sheet_name }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $json.phone }}",
+            "name": "={{ $json.name }}",
+            "last_reply_text": "={{ $json.reply_text }}",
+            "last_reply_at": "={{ $json.replied_at }}",
+            "conversation_id": "={{ $json.conversation_id }}"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_reply_text",
+              "displayName": "last_reply_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_reply_at",
+              "displayName": "last_reply_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b08",
+      "name": "Upsert the sheet row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        820,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "operation": "addNote",
+        "conversationId": {
+          "__rl": true,
+          "value": "={{ $('Shape the row').item.json.conversation_id }}",
+          "mode": "id"
+        },
+        "noteBody": "=Owner replied from the phone at {{ $('Shape the row').item.json.replied_at }}; sheet updated."
+      },
+      "id": "b7e1c0a4-4f2d-4e8a-9c31-5d0e6f7a8b09",
+      "name": "Mark the follow-up done",
+      "type": "n8n-nodes-cosend.cosend",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Owner replied from the phone": {
+      "main": [
+        [
+          {
+            "node": "Set your values",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your values": {
+      "main": [
+        [
+          {
+            "node": "Shape the row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape the row": {
+      "main": [
+        [
+          {
+            "node": "Upsert the sheet row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert the sheet row": {
+      "main": [
+        [
+          {
+            "node": "Mark the follow-up done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

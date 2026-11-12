@@ -1,6 +1,6 @@
 # Cosend workflow templates for n8n
 
-Three ready-to-import n8n workflows built on the **Cosend** and **Cosend Trigger** nodes. Each one
+Five ready-to-import n8n workflows built on the **Cosend** and **Cosend Trigger** nodes. Each one
 carries sticky notes that walk you through setup on the canvas.
 
 | Template | File | Starts with |
@@ -8,6 +8,8 @@ carries sticky notes that walk you through setup on the canvas.
 | [Google Sheets to WhatsApp](#google-sheets-to-whatsapp) | [`google-sheets-to-whatsapp.json`](./google-sheets-to-whatsapp.json) | Every 5 minutes, the rows not sent yet |
 | [Receive WhatsApp messages](#receive-whatsapp-messages) | [`receive-whatsapp-messages.json`](./receive-whatsapp-messages.json) | A WhatsApp message |
 | [WhatsApp AI agent](#whatsapp-ai-agent) | [`whatsapp-ai-agent.json`](./whatsapp-ai-agent.json) | A WhatsApp message |
+| [Log phone replies to Google Sheets](#log-phone-replies-to-google-sheets) | [`log-phone-replies-to-google-sheets.json`](./log-phone-replies-to-google-sheets.json) | A reply sent from the WhatsApp Business app |
+| [WhatsApp window alert to Slack](#whatsapp-window-alert-to-slack) | [`whatsapp-window-alert-to-slack.json`](./whatsapp-window-alert-to-slack.json) | One hour before a 24-hour window closes |
 
 ## Before you start
 
@@ -22,7 +24,7 @@ Every template needs:
   paste it. A `cok_test_` or `csk_test_` key lets you build without sending live traffic.
 - **A WhatsApp number connected to Cosend.**
 
-Each template is tested with n8n-nodes-cosend 2026.11.0 (community node) on self-hosted n8n 2.46.6.
+Each template is tested with n8n-nodes-cosend 2026.11.1 (community node) on self-hosted n8n 2.47.3.
 A picture of each workflow is in [`images/`](./images/), for when n8n's preview of a community node
 does not render.
 
@@ -110,3 +112,55 @@ answer from the WhatsApp Business app.
 credential on **When a WhatsApp message arrives**, **Who is answering**, **Pass to my team** and
 **Reply on WhatsApp**, add your model credential, and describe your business in the **AI Agent**
 system message.
+
+## Log phone replies to Google Sheets
+
+![The Log phone replies to Google Sheets workflow in n8n](./images/log-phone-replies-to-google-sheets.png)
+
+**What it does.** When the owner answers a customer from the WhatsApp Business app on their phone,
+Cosend sends **Message Echo** and the Cosend Trigger starts the workflow. It keeps one row per
+customer in a Google Sheet, matched on the phone number, with **phone**, **name**,
+**last_reply_text** (the first 200 characters of the reply), **last_reply_at** and
+**conversation_id**. It then adds an internal note to the conversation in Cosend, so your team sees
+the sheet is current. Use the sheet as the stop condition for your follow-ups: a customer the owner
+answered from the phone gets no reminder.
+
+**What you need.**
+
+- A WhatsApp number connected to Cosend with **Keep WhatsApp on my phone** (coexistence). Message
+  Echo comes from such a number.
+- An n8n instance Cosend can reach over the internet.
+- A Google account connected to n8n, and a sheet with a tab named **Replies** whose header row is
+  **phone**, **name**, **last_reply_text**, **last_reply_at** and **conversation_id**.
+
+**How to import.** Import
+[`log-phone-replies-to-google-sheets.json`](./log-phone-replies-to-google-sheets.json) and fill in
+**Set your values**: **sheet_id** is the long ID in your sheet's URL, **sheet_name** the tab, and
+**max_text_length** how much of each reply to keep. Pick your Google account in **Upsert the sheet
+row**, and your Cosend credential on **Owner replied from the phone** and **Mark the follow-up
+done**. Then turn the workflow on.
+
+## WhatsApp window alert to Slack
+
+![The WhatsApp window alert to Slack workflow in n8n](./images/whatsapp-window-alert-to-slack.png)
+
+**What it does.** Cosend sends **Conversation Window Expiring** one hour before WhatsApp's 24-hour
+customer service window closes on a chat. While the chat is still open and assigned to nobody, the
+workflow posts the customer's name, number and a link to the chat in the Cosend inbox to a Slack
+channel, then adds a note to the conversation saying the alert went out. A reply from the inbox or
+from the WhatsApp Business app in that hour goes out as free-form text; after the window, an
+approved template reaches the customer.
+
+**What you need.**
+
+- An n8n instance Cosend can reach over the internet.
+- A Slack account connected to n8n, and a channel for the alerts.
+
+**How to import.** Import
+[`whatsapp-window-alert-to-slack.json`](./whatsapp-window-alert-to-slack.json), set
+**slack_channel** in **Set your values**, pick your Slack account in **Post the alert**, and your
+Cosend credential on **Window closes in one hour** and **Record the alert**. Then turn the workflow
+on. **inbox_url** is the Cosend inbox, `https://dashboard.cosend.app/inbox/`, and the alert adds
+the conversation ID to it, which opens that chat. Set **only_unassigned** to `false` to be alerted
+about assigned chats too. To check that Cosend reaches your n8n, use **Send test** on the webhook in
+the Cosend dashboard (**Settings > Webhooks**): the trigger answers the test event and starts no run.

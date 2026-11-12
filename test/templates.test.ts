@@ -8,16 +8,18 @@ import { describe, expect, it } from 'vitest';
  * - One main overview note: yellow, top-left, 100 to 300 words, with the headings "### How it works"
  *   and "### Setup" ("### Customization" is optional).
  * - A workflow of 4 or more nodes also has section notes: white, each under 50 words, with a "## "
- *   heading.
+ *   heading. A red note, held to the same length and heading, warns about a critical setup step.
  * - A template using a community node names the package, the version tested, and links to its
- *   installation instructions.
+ *   installation instructions. Each overview carries the Setup line of the n8n.io template brief
+ *   (6 Nov 2026): "version tested 0.2.0; install guide at cosend.app/docs/n8n".
  * - No credentials and no pinned data.
  */
 
-/** n8n's sticky-note colours, by the index a workflow stores: 1 is yellow (the default), 7 white. */
+/** n8n's sticky-note colours, by the index a workflow stores: 1 is yellow (the default), 3 red, 7 white. */
 const YELLOW = 1;
+const RED = 3;
 const WHITE = 7;
-const INSTALL_GUIDE = 'https://docs.n8n.io/integrations/community-nodes/installation/';
+const INSTALL_GUIDE = 'cosend.app/docs/n8n';
 
 type Node = {
 	name: string;
@@ -52,8 +54,10 @@ describe('the templates', () => {
 	it('are all found', () => {
 		expect(templates.map(([file]) => file).sort()).toEqual([
 			'google-sheets-to-whatsapp.json',
+			'log-phone-replies-to-google-sheets.json',
 			'receive-whatsapp-messages.json',
 			'whatsapp-ai-agent.json',
+			'whatsapp-window-alert-to-slack.json',
 		]);
 	});
 
@@ -89,15 +93,17 @@ describe('the templates', () => {
 		it('names the community node, the version tested and how to install it', () => {
 			const content = overviews[0].parameters.content ?? '';
 			expect(content).toContain('n8n-nodes-cosend');
-			expect(content).toMatch(/n8n-nodes-cosend \d{4}\.\d+\.\d+/);
+			expect(content).toMatch(/version tested \d+\.\d+\.\d+/);
 			expect(content).toContain(INSTALL_GUIDE);
 		});
 
-		it('has white section notes under 50 words, each with a heading', () => {
-			if (steps.length >= 4) expect(sections.length).toBeGreaterThan(0);
+		it('has white section notes, and red warnings, under 50 words, each with a heading', () => {
+			if (steps.length >= 4) {
+				expect(sections.filter((note) => note.parameters.color === WHITE).length).toBeGreaterThan(0);
+			}
 			for (const note of sections) {
 				const content = note.parameters.content ?? '';
-				expect(note.parameters.color, note.name).toBe(WHITE);
+				expect([WHITE, RED], note.name).toContain(note.parameters.color);
 				expect(content, note.name).toMatch(/^## \S/);
 				expect(words(content), note.name).toBeLessThan(50);
 			}
